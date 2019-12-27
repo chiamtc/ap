@@ -15,6 +15,8 @@ class AudioPlayer extends Component {
         web_audio.decodeArrayBuffer(ab, (res) => {
             web_audio.loadDecodedArrayBuffer(res);
             console.log(web_audio.source);
+            web_audio.source.connect(web_audio.audioContext.destination);
+            web_audio.source.start()
         });
         // console.log(audioBuffer);
     }
