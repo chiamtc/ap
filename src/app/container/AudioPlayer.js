@@ -12,13 +12,18 @@ class AudioPlayer extends Component {
         const web_audio = new Webaudio();
         web_audio.init();
         const ab = await this.getArrayBuffer();
-        web_audio.decodeArrayBuffer(ab, (res) => {
+       /* web_audio.decodeArrayBuffer(ab, (res) => {
             web_audio.loadDecodedArrayBuffer(res);
             console.log(web_audio.source);
             web_audio.source.connect(web_audio.audioContext.destination);
             web_audio.source.start()
-        });
-        // console.log(audioBuffer);
+        });*/
+       //rxjs observable
+       // web_audio.decodeArrayBuffer(ab).subscribe(res => console.log('res',res))
+
+        const audioBuffer = await web_audio.decodeArrayBuffer(ab);
+        web_audio.loadDecodedArrayBuffer(audioBuffer);
+        web_audio.source.connect(web_audio.audioContext.destination);
     }
 
     async getArrayBuffer() {

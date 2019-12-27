@@ -8,7 +8,9 @@
     "docs": "styleguidist build",
     "test_docs": "npm run test:coverage && npm run docs"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rxjs": "^6.5.3"
+  },
   "devDependencies": {
     "@babel/cli": "^7.6.2",
     "@babel/core": "^7.6.2",

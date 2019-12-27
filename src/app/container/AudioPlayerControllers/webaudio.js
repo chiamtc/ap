@@ -1,3 +1,5 @@
+import {bindCallback, Observable} from "rxjs";
+
 class Webaudio {
     static scriptBufferSize = 512;
 
@@ -6,7 +8,7 @@ class Webaudio {
         this.audioContext = this.getAudioContext();
         this.offlineAudioContext = null;
         this.scriptNode = null; //AudioScriptProcessor
-        this.source = null ; //AudioBufferSourceNode
+        this.source = null; //AudioBufferSourceNode
     }
 
     init() {
@@ -22,21 +24,70 @@ class Webaudio {
         return new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, sampleRate);
     }
 
-    //after httpfetched codes
-    decodeArrayBuffer(arrayBuffer, cb, errorCb) {
+    decodeArrayBuffer(arrayBuffer) {
         if (!this.offlineAudioContext) {
             this.offlineAudioContext = this.getOfflineAudioContext(this.audioContext && this.audioContext.sampleRate ? this.audioContext.sampleRate : 44100);
         }
-        this.offlineAudioContext.decodeAudioData(arrayBuffer, data => {
-            cb(data);
-        }, errorCb);
+        //method 1: callback fn
+        /*   this.offlineAudioContext.decodeAudioData(arrayBuffer, data => {
+               cb(data);
+           }, errorCb);*/
+
+        //method 2: rxjs observable design pattern
+        /*return new Observable(observer => {
+                this.offlineAudioContext.decodeAudioData(arrayBuffer,
+                    (value) => {
+                        observer.next(value);
+                        observer.complete();
+                    },
+                    (error) => observer.error(error)
+                );
+            });*/
+
+        //method 3: rxjs -> promise
+        return new Observable(observer => {
+            this.offlineAudioContext.decodeAudioData(arrayBuffer,
+                (value) => {
+                    observer.next(value);
+                    observer.complete();
+                },
+                (error) => observer.error(error)
+            );
+        }).toPromise();
     }
 
-    loadDecodedArrayBuffer(data){
+    play(start,end){
+        if (!this.buffer) {
+            return;
+        }
+
+        // need to re-create source on each playback
+        this.createSource();
+
+        const adjustedTime = this.seekTo(start, end);
+
+        start = adjustedTime.start;
+        end = adjustedTime.end;
+
+        this.scheduledPause = end;
+
+        this.source.start(0, start);
+
+        if (this.ac.state == 'suspended') {
+            this.ac.resume && this.ac.resume();
+        }
+
+        // this.setState(PLAYING);
+
+        // this.fireEvent('play');
+    }
+
+    //TODO: add currenttime, previouslyplayed
+    loadDecodedArrayBuffer(data) {
         this.source = this.audioContext.createBufferSource();
         this.buffer = data;
         this.source.buffer = this.buffer;
-        this.source.start(0)
+        // this.source.start(0) //move this to an actual button with onclick()
     }
 
     createScriptNode() {
