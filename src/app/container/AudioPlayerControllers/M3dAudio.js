@@ -51,7 +51,7 @@ class M3dAudio {
         {
             fb: [1, -1.9520241022109985, 0.9528384208679199],
             ff: [0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
-        } 
+        }
     ]
         let d = [0, 0];
         let maxes = [];
@@ -92,5 +92,14 @@ class M3dAudio {
         });
     }
 }
+
+//seems like this repo has all fft win func https://github.com/markert/fili.js/blob/master/src/fft.js
+//good read: https://gist.github.com/chrisguttandin/e49764f9c29376780f2eb1f7d22b54e4
+//biquad filter read: http://www.earlevel.com/main/2003/02/28/biquads/ // this has most of the implementation on coefs in central until
+/*
+y = x * biquad[0] + z111;
+z111 = z222 – biquad[3] * y;
+z222 = x * biquad[2] – biquad[4] * y;
+ */
 
 export default M3dAudio;

@@ -113,7 +113,10 @@ class WebAudio {
         this.startPosition = 0;
         this.lastPlay = this.audioContext.currentTime;
         this.buffer = audioBuffer;
+        //TODO: apply filter before createBufferSource()
+        //clone buffer?
         this.createBufferSource();
+        console.log('d') //meaning done here. TODO: subject next() here
     }
 
     createBufferSource() {
