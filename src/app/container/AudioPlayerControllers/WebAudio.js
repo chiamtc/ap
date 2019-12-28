@@ -121,6 +121,31 @@ class WebAudio {
         this.source = this.audioContext.createBufferSource();
         this.source.buffer = this.buffer;
         this.source.connect(this.audioContext.destination);
+        // this.source.start();
+      /*  if (!this.offlineAudioContext) {
+            this.offlineAudioContext = this.getOfflineAudioContext(this.audioContext && this.audioContext.sampleRate ? this.audioContext.sampleRate : 44100);
+            this.offlineAudioContext.startRendering().then((buffer) => {
+                console.log(buffer);
+                let d = [0, 0]; //Array.apply(null, Array(ord)).map(Number.prototype.valueOf,0);
+                let input = buffer.getChannelData(0);
+                let outputBuff = audioContext.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate)
+
+                let output = outputBuff.getChannelData(0);
+                let maxes = [];
+                for (let j = 0; j < _coef.length; j += 1) {
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = _coef[j].ff[0] * input[i] + d[0];
+                        d[0] = _coef[j].ff[1] * input[i] - _coef[j].fb[1] * output[i] + d[1];
+                        d[1] = _coef[j].ff[2] * input[i] - _coef[j].fb[2] * output[i];
+                        input[i] = output[i];
+                        maxes.push(output[i]);
+                        output[i] = output[i] * gain;
+                    }
+                    d[0] = d[1] = 0;
+                }
+            })
+        }*/
+
     }
 
     //used in init()
