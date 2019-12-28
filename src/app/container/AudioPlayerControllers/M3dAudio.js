@@ -33,30 +33,26 @@ class M3dAudio {
     async loadArrayBuffer(arrayBuffer) {
         this.array_buffer = arrayBuffer;
         this.audio_buffer = await this.web_audio.decodeArrayBuffer(arrayBuffer);
-     /*   const input = this.audio_buffer.getChannelData(0).slice();
+        const input = this.audio_buffer.getChannelData(0).slice();
         const output = this.audio_buffer.getChannelData(0).slice();
-        let _coef =  [
-            {
-                fb: [1, -0.203502967954, 0.002077921294],
-                ff: [-0.500006496906, 0.500003695488, -0.00000753813]
-            },
-            {
-                fb: [1, -0.210254460573, 0.010951761156],
-                ff: [1.000003933907, 0.030092282221, 0.000140675664]
-            },
-            {
-                fb: [1, 0.878565192223, 0.000505236792],
-                ff: [0.251294931769, 0.01082280064, 0.000114870157]
-            },
-            {
-                fb: [1, -1.759878754616, 0.908428549767],
-                ff: [0.801160097122, 0.037218801677, 0.000310876989]
-            },
-            {
-                fb: [1, -1.924331188202, 0.945789158344],
-                ff: [0.065244078636, 0.002754359506, 0.000019586514]
-            }
-        ]
+        let _coef =   [
+        {
+            fb: [1, -1.2621407508850098, 0.8533923625946045],
+            ff: [0.1658635704779951, -0.17049753937028886, 0.004650211082637766]
+        },
+        {
+            fb: [1, -1.225411295890808, 0.612431526184082],
+            ff: [0.6367747847741175, -0.655921592250425, 0.04247856434965213]
+        },
+        {
+            fb: [1, -1.7005388736724854, 0.7515528202056885],
+            ff: [0.48852423462836897, 0.3494028802722561, 0.015667778677698384]
+        },
+        {
+            fb: [1, -1.9520241022109985, 0.9528384208679199],
+            ff: [0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
+        } 
+    ]
         let d = [0, 0];
         let maxes = [];
         for (let j = 0; j < _coef.length; j += 1) {
@@ -69,8 +65,8 @@ class M3dAudio {
                 output[i] = output[i];
             }
             d[0] = d[1] = 0;
-        }*/
-        // this.audio_buffer.copyToChannel(output, 0); //works but i think memory footprint is going to be really high
+        }
+        this.audio_buffer.copyToChannel(output, 0); //works but i think memory footprint is going to be really high
         this.web_audio.loadAudioBuffer(this.audio_buffer);
     }
 
