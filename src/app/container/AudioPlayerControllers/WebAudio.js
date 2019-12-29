@@ -1,6 +1,7 @@
 import {Observable} from "rxjs";
 import {subjects} from './M3dAudio';
 import {SUSPENDED, PLAYING, PAUSED, FINISHED} from './constants';
+import {BELL_FILTER, HEART_FILTER, listOfFilter} from "./constants/filterschema";
 
 class WebAudio {
     static scriptBufferSize = 512;
@@ -120,8 +121,10 @@ class WebAudio {
         //TODO: apply filter before createBufferSource()
         //clone buffer?
         this.createBufferSource();
+        // this.applyFilter();
         console.log('d') //meaning done here. TODO: subject next() here
     }
+
     //https://chinmay.audio/iirfilter-workshop/ iirfilternode to check
     //b=[ 1, -1.2621407508850098, 0.8533923625946045, 1, -1.225411295890808, 0.612431526184082, 1, -1.7005388736724854, 0.7515528202056885, 1, -1.9520241022109985, 0.9528384208679199]
     //a=[0.1658635704779951, -0.17049753937028886, 0.004650211082637766, 0.6367747847741175, -0.655921592250425, 0.04247856434965213, 0.48852423462836897, 0.3494028802722561, 0.015667778677698384, 0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
@@ -138,6 +141,8 @@ class WebAudio {
         this.disconnectBufferSource();
         this.source = this.audioContext.createBufferSource();
         this.source.buffer = this.buffer;
+
+        this.applyFilter();
 
         // not anymore
         // TODO : add this.source.connect(xxNode) //xxNode = audio effects filter. refs:https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
@@ -205,7 +210,9 @@ class WebAudio {
     play(start, end) {
         if (!this.buffer) return;
         // need to re-create source on each playback
+
         this.createBufferSource();
+
         const adjustedTime = this.seekTo(start, end);
         start = adjustedTime.start;
         end = adjustedTime.end;
@@ -311,9 +318,15 @@ class WebAudio {
         if (this.source) this.source.disconnect();
     }
 
-    //TODO: ~~clone this.buffer and apply the coefs~~ try using iirfilternode
+    //TODO: ~~clone this.buffer and apply the coefs~~ try using iirfilternode//done
+    //only the last iirfilter has to conenct to audioContext.destination
     applyFilter() {
-
+        const coef = BELL_FILTER.coefficients;
+        coef.map((f, i) => {
+            const iirFilter = this.audioContext.createIIRFilter(f.ff, f.fb);
+            if (i === coef.length - 1) this.source.connect(iirFilter).connect(this.audioContext.destination);
+            else this.source.connect(iirFilter);
+        });
     }
 
 }

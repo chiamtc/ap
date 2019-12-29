@@ -1,3 +1,4 @@
 node_modules
 .idea
 .DS_Store
+src/app/container/AudioPlayerControllers/constants/filterschema.js
