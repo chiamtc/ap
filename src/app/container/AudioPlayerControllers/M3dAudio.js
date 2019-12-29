@@ -12,6 +12,8 @@ class M3dAudio {
         this.web_audio = null;
         this.array_buffer = null;
         this.audio_buffer = null;
+        this.savedVolume = 1; //default 1
+        this.isMuted = false; //default 1
     }
 
     create() {
@@ -33,40 +35,40 @@ class M3dAudio {
     async loadArrayBuffer(arrayBuffer) {
         this.array_buffer = arrayBuffer;
         this.audio_buffer = await this.web_audio.decodeArrayBuffer(arrayBuffer);
-        const input = this.audio_buffer.getChannelData(0).slice();
-        const output = this.audio_buffer.getChannelData(0).slice();
-        let _coef =   [
-        {
-            fb: [1, -1.2621407508850098, 0.8533923625946045],
-            ff: [0.1658635704779951, -0.17049753937028886, 0.004650211082637766]
-        },
-        {
-            fb: [1, -1.225411295890808, 0.612431526184082],
-            ff: [0.6367747847741175, -0.655921592250425, 0.04247856434965213]
-        },
-        {
-            fb: [1, -1.7005388736724854, 0.7515528202056885],
-            ff: [0.48852423462836897, 0.3494028802722561, 0.015667778677698384]
-        },
-        {
-            fb: [1, -1.9520241022109985, 0.9528384208679199],
-            ff: [0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
-        }
-    ]
-        let d = [0, 0];
-        let maxes = [];
-        for (let j = 0; j < _coef.length; j += 1) {
-            for (let i = 0; i < this.audio_buffer.length; i++) {
-                output[i] = _coef[j].ff[0] * input[i] + d[0];
-                d[0] = _coef[j].ff[1] * input[i] - _coef[j].fb[1] * output[i] + d[1];
-                d[1] = _coef[j].ff[2] * input[i] - _coef[j].fb[2] * output[i];
-                input[i] = output[i];
-                maxes.push(output[i]);
-                output[i] = output[i];
-            }
-            d[0] = d[1] = 0;
-        }
-        this.audio_buffer.copyToChannel(output, 0); //works but i think memory footprint is going to be really high
+        /*     const input = this.audio_buffer.getChannelData(0).slice();
+             const output = this.audio_buffer.getChannelData(0).slice();
+             let _coef =   [
+             {
+                 fb: [1, -1.2621407508850098, 0.8533923625946045],
+                 ff: [0.1658635704779951, -0.17049753937028886, 0.004650211082637766]
+             },
+             {
+                 fb: [1, -1.225411295890808, 0.612431526184082],
+                 ff: [0.6367747847741175, -0.655921592250425, 0.04247856434965213]
+             },
+             {
+                 fb: [1, -1.7005388736724854, 0.7515528202056885],
+                 ff: [0.48852423462836897, 0.3494028802722561, 0.015667778677698384]
+             },
+             {
+                 fb: [1, -1.9520241022109985, 0.9528384208679199],
+                 ff: [0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
+             }
+         ]
+             let d = [0, 0];
+             let maxes = [];
+             for (let j = 0; j < _coef.length; j += 1) {
+                 for (let i = 0; i < this.audio_buffer.length; i++) {
+                     output[i] = _coef[j].ff[0] * input[i] + d[0];
+                     d[0] = _coef[j].ff[1] * input[i] - _coef[j].fb[1] * output[i] + d[1];
+                     d[1] = _coef[j].ff[2] * input[i] - _coef[j].fb[2] * output[i];
+                     input[i] = output[i];
+                     maxes.push(output[i]);
+                     output[i] = output[i];
+                 }
+                 d[0] = d[1] = 0;
+             }
+             this.audio_buffer.copyToChannel(output, 0);*/ //works but i think memory footprint is going to be really high
         this.web_audio.loadAudioBuffer(this.audio_buffer);
     }
 
@@ -76,6 +78,8 @@ class M3dAudio {
 
     play(start, end) {
         // this.fireEvent('interaction', () => this.play(start, end));
+        if (this.isMuted) this.web_audio.setGain(0);
+        this.web_audio.setGain(this.savedVolume);
         return this.web_audio.play(start, end);
     }
 
@@ -83,6 +87,31 @@ class M3dAudio {
         if (!this.web_audio.isPaused()) {
             return this.web_audio.pause();
         }
+    }
+
+    setVolume(value) {
+        /*if(value === 0){
+            if(this.gainState) {
+                console.log('here')
+                this.web_audio.gainNode.disconnect();
+            }
+        }else {
+            if(!this.gainState) {
+                this.web_audio.source.connect(this.web_audio.gainNode);
+                this.web_audio.setGain(value);
+            }
+        }*/
+        // console.log('m3daudio', value);
+        this.savedVolume = value;
+        if (this.savedVolume === 0) {
+            this.isMuted = true;
+        }
+        this.isMuted=false;
+        this.web_audio.setGain(this.savedVolume);
+    }
+
+    getVolume() {
+        return this.web_audio.getGain();
     }
 
     getCurrentTime(cb) {
@@ -101,5 +130,7 @@ y = x * biquad[0] + z111;
 z111 = z222 – biquad[3] * y;
 z222 = x * biquad[2] – biquad[4] * y;
  */
+
+//webaudio api gain node, filter and etc etc https://www.html5rocks.com/en/tutorials/webaudio/intro/
 
 export default M3dAudio;

@@ -50,6 +50,8 @@ class WebAudio {
         this.audioContext = this.getAudioContext();
         this.offlineAudioContext = null;
         this.scriptNode = null; //AudioScriptProcessor
+        // this.analyserNode = null; //deprecated
+        this.gainNode = null; //GainNode
         this.source = null; //AudioBufferSourceNode
         this.states = {
             [PLAYING]: Object.create(this.stateBehaviors[PLAYING]),
@@ -63,7 +65,9 @@ class WebAudio {
     }
 
     init() {
+        this.createGainNode();
         this.createScriptNode();
+        // this.createAnalyserNode(); //deprecated
         this.setState(PAUSED);
     }
 
@@ -118,37 +122,31 @@ class WebAudio {
         this.createBufferSource();
         console.log('d') //meaning done here. TODO: subject next() here
     }
+    //https://chinmay.audio/iirfilter-workshop/ iirfilternode to check
+    //b=[ 1, -1.2621407508850098, 0.8533923625946045, 1, -1.225411295890808, 0.612431526184082, 1, -1.7005388736724854, 0.7515528202056885, 1, -1.9520241022109985, 0.9528384208679199]
+    //a=[0.1658635704779951, -0.17049753937028886, 0.004650211082637766, 0.6367747847741175, -0.655921592250425, 0.04247856434965213, 0.48852423462836897, 0.3494028802722561, 0.015667778677698384, 0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
 
+    /* part 1
+      gainNode   -|
+                 -|-> audiocontext.destination aka speaker
+      scriptNode -|
+
+       part 2
+       audioContext.createBufferSource --> connect to all the audio effects filters --> audiocontext.destination aka speaker
+     */
     createBufferSource() {
         this.disconnectBufferSource();
         this.source = this.audioContext.createBufferSource();
         this.source.buffer = this.buffer;
-        this.source.connect(this.audioContext.destination);
-        // this.source.start();
-      /*  if (!this.offlineAudioContext) {
-            this.offlineAudioContext = this.getOfflineAudioContext(this.audioContext && this.audioContext.sampleRate ? this.audioContext.sampleRate : 44100);
-            this.offlineAudioContext.startRendering().then((buffer) => {
-                console.log(buffer);
-                let d = [0, 0]; //Array.apply(null, Array(ord)).map(Number.prototype.valueOf,0);
-                let input = buffer.getChannelData(0);
-                let outputBuff = audioContext.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate)
 
-                let output = outputBuff.getChannelData(0);
-                let maxes = [];
-                for (let j = 0; j < _coef.length; j += 1) {
-                    for (let i = 0; i < bufferSize; i++) {
-                        output[i] = _coef[j].ff[0] * input[i] + d[0];
-                        d[0] = _coef[j].ff[1] * input[i] - _coef[j].fb[1] * output[i] + d[1];
-                        d[1] = _coef[j].ff[2] * input[i] - _coef[j].fb[2] * output[i];
-                        input[i] = output[i];
-                        maxes.push(output[i]);
-                        output[i] = output[i] * gain;
-                    }
-                    d[0] = d[1] = 0;
-                }
-            })
-        }*/
+        // not anymore
+        // TODO : add this.source.connect(xxNode) //xxNode = audio effects filter. refs:https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+        //start end effects filter
+        // this.source.connect(this.gainNode);
+        //end effects filter
 
+        //final step
+        this.source.connect(this.audioContext.destination); //has to connect
     }
 
     //used in init()
@@ -156,18 +154,36 @@ class WebAudio {
         if (this.audioContext.createScriptProcessor) {
             this.scriptNode = this.audioContext.createScriptProcessor(WebAudio.scriptBufferSize);
         }
-        //TODO: create gain node and connects to audioContext.destination. Then, scriptNode connects to gainNode
-        //Wavesurfer uses this idea.
-        //1. gainNode connects to audioContext.destination
-        //2. analyserNode connects to gainNode
-        //3. scriptNode connects to analyserNode
         this.scriptNode.connect(this.audioContext.destination);
     }
+
+
+    createGainNode() {
+        if (this.audioContext.createGain) {
+            this.gainNode = this.audioContext.createGain();
+        } else {
+            this.gainNode = this.audioContext.createGainNode();
+        }
+        this.gainNode.connect(this.audioContext.destination);
+    }
+
+    //pretty useless atm https://stackoverflow.com/questions/25368596/web-audio-offline-context-and-analyser-node
+    /* createAnalyserNode() {
+         this.analyserNode = this.audioContext.createAnalyser();
+         this.analyserNode.connect(this.gainNode);
+
+         //this chunk of code was placed in createBufferSource()
+         // this.analyserNode.fftSize = 1024;
+         // this.analyserNode.connect(this.audioContext.destination);
+         // var data = new Uint8Array(this.analyserNode.frequencyBinCount);
+         // console.log(this.analyserNode)
+         // this.analyserNode.getByteFrequencyData(data);
+     }*/
 
     addOnAudioProcess() {
         return this.scriptNode.onaudioprocess = () => {
             const time = this.getCurrentTime();
-            //TODO: add observable here for m3daudio to subscribe
+            //TODO: add observable here for m3daudio to subscribe //done
             if (time >= this.getDuration()) {
                 this.setState(FINISHED);
                 subjects.webAudio_state.next(FINISHED);
@@ -188,10 +204,8 @@ class WebAudio {
 
     play(start, end) {
         if (!this.buffer) return;
-
         // need to re-create source on each playback
         this.createBufferSource();
-
         const adjustedTime = this.seekTo(start, end);
         start = adjustedTime.start;
         end = adjustedTime.end;
@@ -204,6 +218,8 @@ class WebAudio {
             this.audioContext.resume && this.audioContext.resume();
         }
 
+        //used when user pause, then mute then play again. aka mute while playing
+        if (this.getGain() === 0) this.source.disconnect();
         this.setState(PLAYING);
         subjects.webAudio_state.next(PLAYING);
         // this.fireEvent('play'); //done
@@ -256,6 +272,24 @@ class WebAudio {
         }
     }
 
+    getGain() {
+        return this.gainNode.gain.value;
+    }
+
+    /* TODO
+        - min value is 0, max value is ?? in this context that we set, by "we", I mean "me"
+        - use of slider to set min and max value to 0 to ??
+        - percentage is calculate using slider.currentValue/gain.maxValue * 100
+        - some thought: min =0 , max = 10 then use DynamicsCompressorNode to prevent distortion and clipping. https://developer.mozilla.org/en-US/docs/Web/API/DynamicsCompressorNode
+        references:
+        gainNode.gain.minValue = https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/minValue
+        gainNode.gain.maxValue = https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/maxValue
+     */
+    setGain(value) {
+        this.gainNode.gain.value = value;
+        value > 0 ? this.source.connect(this.gainNode) : this.source.disconnect();
+    }
+
     getCurrentTime() {
         return this.state.getCurrentTime.call(this);
     }
@@ -273,12 +307,11 @@ class WebAudio {
         return this.buffer.duration;
     }
 
-    //clear buffersource
     disconnectBufferSource() {
         if (this.source) this.source.disconnect();
     }
 
-    //TODO: clone this.buffer and apply the coefs
+    //TODO: ~~clone this.buffer and apply the coefs~~ try using iirfilternode
     applyFilter() {
 
     }
