@@ -118,10 +118,7 @@ class WebAudio {
         this.startPosition = 0;
         this.lastPlay = this.audioContext.currentTime;
         this.buffer = audioBuffer;
-        //TODO: apply filter before createBufferSource()
-        //clone buffer?
         this.createBufferSource();
-        // this.applyFilter();
         console.log('d') //meaning done here. TODO: subject next() here
     }
 
@@ -172,7 +169,7 @@ class WebAudio {
         this.gainNode.connect(this.audioContext.destination);
     }
 
-    //pretty useless atm https://stackoverflow.com/questions/25368596/web-audio-offline-context-and-analyser-node
+    //pretty useless atm due to usage of offlineaudiocontext and analyser node doesn't support it source:https://stackoverflow.com/questions/25368596/web-audio-offline-context-and-analyser-node
     /* createAnalyserNode() {
          this.analyserNode = this.audioContext.createAnalyser();
          this.analyserNode.connect(this.gainNode);
@@ -318,15 +315,23 @@ class WebAudio {
         if (this.source) this.source.disconnect();
     }
 
-    //TODO: ~~clone this.buffer and apply the coefs~~ try using iirfilternode//done
-    //only the last iirfilter has to conenct to audioContext.destination
+    //TODO: ~~clone this.buffer and apply the coefs~~ try using iirfilternode //done
+    //TODO: clean up iirfilter when pause and changes of filter
     applyFilter() {
         const coef = BELL_FILTER.coefficients;
+
         coef.map((f, i) => {
             const iirFilter = this.audioContext.createIIRFilter(f.ff, f.fb);
             if (i === coef.length - 1) this.source.connect(iirFilter).connect(this.audioContext.destination);
             else this.source.connect(iirFilter);
-        });
+        })
+        //above loop is equivalent to below
+        //I think codes below are better for changing filter via dropdown menu since changing filter only requires  iirFilter1 to be disconnected.
+       /* const iirFilter1 = this.audioContext.createIIRFilter(coef[0].ff, coef[0].fb);
+        const iirFilter2 = this.audioContext.createIIRFilter(coef[1].ff, coef[1].fb);
+        const iirFilter3 = this.audioContext.createIIRFilter(coef[2].ff, coef[2].fb);
+        const iirFilter4 = this.audioContext.createIIRFilter(coef[3].ff, coef[3].fb);
+        this.source.connect(iirFilter1).connect(iirFilter2).connect(iirFilter3).connect(iirFilter4).connect(this.audioContext.destination)*/
     }
 
 }
