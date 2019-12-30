@@ -114,5 +114,5 @@ z222 = x * biquad[2] – biquad[4] * y;
 
 //webaudio api gain node, filter and etc etc https://www.html5rocks.com/en/tutorials/webaudio/intro/
 //webaudio api example and demo https://webaudioapi.com/samples/ , github repo: https://github.com/borismus/webaudioapi.com/blob/master/content/posts/filter/filter-sample.js
-
+//peaks.js is another good competitor compared to ws https://github.com/bbc/peaks.js
 export default M3dAudio;
