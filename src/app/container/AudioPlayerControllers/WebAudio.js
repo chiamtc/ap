@@ -1,8 +1,6 @@
 import {Observable} from "rxjs";
 import {subjects} from './M3dAudio';
 import {SUSPENDED, PLAYING, PAUSED, FINISHED} from './constants';
-import {BELL_FILTER, HEART_FILTER, listOfFilter} from "./constants/filterschema";
-import Fili from 'fili';
 
 class WebAudio {
     static scriptBufferSize = 512;
@@ -34,8 +32,7 @@ class WebAudio {
         [FINISHED]: {
             init() {
                 this.removeOnAudioProcess();
-                subjects.webAudio_state.next(FINISHED);
-                // this.fireEvent('finish'); //done
+                subjects.webAudio_state.next(FINISHED); //fire webAudio_state(FINISHED:string):Subscription event
             },
             getPlayedPercents() {
                 return 1;
@@ -46,32 +43,54 @@ class WebAudio {
         }
     };
 
-    constructor(params) {
-        // this.subjects = subjects;
-        this.buffer = null;
-        this.filteredBuffer = null;
-        this.audioContext = this.getAudioContext();
-        this.offlineAudioContext = null;
-        this.scriptNode = null; //AudioScriptProcessor
-        // this.analyserNode = null; //deprecated
+    constructor() {
+        //Named by category from https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API. Each property, if present in this class, is named by class
+        //Some of them are not declared but initialised via audioContext
+        //General Audio Graph Definition
+        this.audioContext = this.getAudioContext(); //AudioContext
+        this.offlineAudioContext = null; //OfflineAudioContext
+
+        //Audio Sources
+        this.buffer = null; //AudioBuffer, original buffer from firebase storage
+        this.filteredBuffer = null; //AudioBuffer //filtered buffer
+
+        //Audio Sources
+        this.source = null; //AudioBufferSourceNode, responsible to play, stop etc
+
+        //Audio Effects Filters
         this.gainNode = null; //GainNode
-        this.source = null; //AudioBufferSourceNode
+
+        //Audio processing
+        this.scriptNode = null; //AudioScriptProcessor
+
+        //Data analysis and visualization
+        //this.analyserNode = null; //deprecated AnalyserNode
+
+
+        //states
         this.states = {
             [PLAYING]: Object.create(this.stateBehaviors[PLAYING]),
             [PAUSED]: Object.create(this.stateBehaviors[PAUSED]),
             [FINISHED]: Object.create(this.stateBehaviors[FINISHED])
         };
+        //current state
         this.state = null;
+
+        //finish time
         this.scheduledPause = null;
+        //startPosition if audio is paused. default is 0. if filter is applied, it goes back to 0
         this.startPosition = 0;
+        //current time of playing, it's used for pause()
         this.lastPlay = this.audioContext.currentTime;
+        //loop the audio
+        this.loop = false;
     }
 
     init() {
         this.createGainNode();
         this.createScriptNode();
-        // this.createAnalyserNode(); //deprecated
         this.setState(PAUSED);
+        // this.createAnalyserNode(); //deprecated
     }
 
     getAudioContext() {
@@ -107,7 +126,7 @@ class WebAudio {
         return new Observable(observer => {
             this.offlineAudioContext.decodeAudioData(arrayBuffer,
                 (value) => {
-                    observer.next(value);
+                    observer.next(value); //observer fires (value:AudioBuffer):Observable
                     observer.complete();
                 },
                 (error) => observer.error(error)
@@ -121,32 +140,15 @@ class WebAudio {
         this.lastPlay = this.audioContext.currentTime;
         this.buffer = audioBuffer;
         this.createBufferSource();
-        subjects.webAudio_state.next('ready');
+        subjects.webAudio_state.next('ready'); //fire webAudio_state(READY:string):Subscription event
 
     }
 
-    //https://chinmay.audio/iirfilter-workshop/ iirfilternode to check
-    //b=[ 1, -1.2621407508850098, 0.8533923625946045, 1, -1.225411295890808, 0.612431526184082, 1, -1.7005388736724854, 0.7515528202056885, 1, -1.9520241022109985, 0.9528384208679199]
-    //a=[0.1658635704779951, -0.17049753937028886, 0.004650211082637766, 0.6367747847741175, -0.655921592250425, 0.04247856434965213, 0.48852423462836897, 0.3494028802722561, 0.015667778677698384, 0.4142467303456515, -0.44225218786636344, 0.41445194667817475]
-
-    /* part 1
-      gainNode   -|
-                 -|-> audiocontext.destination aka speaker
-      scriptNode -|
-
-       part 2
-       audioContext.createBufferSource --> connect to all the audio effects filters --> audiocontext.destination aka speaker
-     */
     createBufferSource() {
         this.disconnectBufferSource();
         this.source = this.audioContext.createBufferSource();
-        this.applyFilter();
-        this.source.buffer = this.filteredBuffer; //always use filteredBuffer to play
-
-        // not anymore
         // TODO : add this.source.connect(xxNode) //xxNode = audio effects filter. refs:https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
         //start end effects filter
-        // this.source.connect(this.gainNode);
         //end effects filter
 
         //final step
@@ -190,13 +192,11 @@ class WebAudio {
             //TODO: add observable here for m3daudio to subscribe //done
             if (time >= this.getDuration()) {
                 this.setState(FINISHED);
-                subjects.webAudio_state.next(FINISHED);
-                // this.fireEvent('pause'); //done
+                subjects.webAudio_state.next(FINISHED); //fire webAudio_state(FINISHED:string):Subscription event
             } else if (time >= this.scheduledPause) {
                 this.pause();
             } else if (this.state === this.states[PLAYING]) {
-                subjects.webAudio_scriptNode_onaudioprocess.next(time);
-                // this.fireEvent('audioprocess', time); //done
+                subjects.webAudio_scriptNode_onaudioprocess.next(time); //fire onaudioprocess(time:number):Subscription event
             }
         };
     }
@@ -208,9 +208,10 @@ class WebAudio {
 
     play(start, end) {
         if (!this.buffer) return;
-        // need to re-create source on each playback
 
-        this.createBufferSource();
+        this.createBufferSource(); // need to re-create source on each playback
+
+        this.source.buffer = this.filteredBuffer; //always use filteredBuffer to play
 
         const adjustedTime = this.seekTo(start, end);
         start = adjustedTime.start;
@@ -218,6 +219,7 @@ class WebAudio {
 
         this.scheduledPause = end; //the supposedly finish time
 
+        this.source.loop = this.loop;
         this.source.start(0, start);
 
         if (this.audioContext.state === SUSPENDED) {
@@ -227,20 +229,19 @@ class WebAudio {
         //used when user pause, then mute then play again. aka mute while playing
         if (this.getGain() === 0) this.source.disconnect();
         this.setState(PLAYING);
-        subjects.webAudio_state.next(PLAYING);
-        // this.fireEvent('play'); //done
+        subjects.webAudio_state.next(PLAYING); //fire webAudio_state(PLAYING:string):Subscription event
     }
 
     pause() {
         this.scheduledPause = null;
 
         this.startPosition += this.getPlayedTime();
+
         this.source && this.source.stop(0);
 
         this.setState(PAUSED);
 
-        subjects.webAudio_state.next(PAUSED);
-        // this.fireEvent('pause'); //done
+        subjects.webAudio_state.next(PAUSED); //fire webAudio_state(PAUSED:string):Subscription event
     }
 
     isPaused() {
@@ -254,9 +255,7 @@ class WebAudio {
 
         if (start == null) {
             start = this.getCurrentTime();
-            if (start >= this.getDuration()) {
-                start = 0;
-            }
+            if (start >= this.getDuration()) start = 0;
         }
         if (end == null) end = this.getDuration();
 
@@ -305,7 +304,7 @@ class WebAudio {
     }
 
     getPlayedPercents() {
-        return this.state.getPlayedPercents.call(this); //TODO: * 100 ?
+        return this.state.getPlayedPercents.call(this);
     }
 
     getDuration() {
@@ -317,12 +316,10 @@ class WebAudio {
         if (this.source) this.source.disconnect();
     }
 
-    //TODO: ~~clone this.buffer and apply the coefs~~
+    // TODO: ~~clone this.buffer and apply the coefs~~
     // TODO: ~~try using iirfilternode //done~~ 29/12/2019. Nevermind, iirfilternode class only has getFrequencyResponse() not the time-domain method Im looking for to plot graph. 30/12/2019
-    //TODO: clean up ~~iirfilter~~ when pause and changes of filter
-    applyFilter() {
-        const coef = BELL_FILTER.coefficients;
-
+    // TODO: clean up ~~iirfilter~~ when pause and changes of filter //done
+    applyFilter(coef) {
         /* //the iirfilternode from webaudioapi
         coef.map((f, i) => {
                  const iirFilter = this.audioContext.createIIRFilter(f.ff, f.fb);
@@ -336,15 +333,14 @@ class WebAudio {
         const iirFilter4 = this.audioContext.createIIRFilter(coef[3].ff, coef[3].fb);
         this.source.connect(iirFilter1).connect(iirFilter2).connect(iirFilter3).connect(iirFilter4).connect(this.audioContext.destination);*/
 
-        const input = this.buffer.getChannelData(0).slice();
+        const input = this.buffer.getChannelData(0).slice(); //uses original buffer for, formula x[n]/x[n-1]/x[n-2] | input[i]/input[i-1]/input[i-2]
         const outputBuff = this.audioContext.createBuffer(this.buffer.numberOfChannels, this.buffer.length, this.buffer.sampleRate)
         let output = outputBuff.getChannelData(0);
         let d = [0, 0]; //temp array to hold n-1 and n-2
 
-
         for (let j = 0; j < coef.length; j += 1) {
             for (let i = 0; i < this.buffer.length; i++) {
-                //b = ff, a = fb, references from formula to coef
+                //b = ff, a = fb, a direct reference from formula to coef
                 /* //iirfilter formula from superpowered.com : y[n] = (b0/a0)*x[n] + (b1/a0)*x[n-1] + (b2/a0)*x[n-2] - (a1/a0)*y[n-1] - (a2/a0)*y[n-2]
                 output[i] = (coef[j].ff[0] / coef[j].fb[0]) * input[i] + d[0];
                 d[0] = ((coef[j].ff[1] / coef[j].fb[0]) * input[i]) - ((coef[j].fb[1] / coef[j].fb[0]) * output[i]) + d[1];
@@ -358,9 +354,11 @@ class WebAudio {
                 d[1] = coef[j].ff[2] * input[i] - coef[j].fb[2] * output[i];
                 input[i] = output[i];
             }
-            d[0] = d[1] = 0; //optIn or out? if in, value = -e7, out, value = 18 f points
+            d[0] = d[1] = 0; //optIn or out? if in, value = -e7, out, value = 18 f points on bell filter.
         }
-        this.filteredBuffer = outputBuff;
+
+        this.startPosition = 0; //if new filter is applied, restart
+        this.filteredBuffer = outputBuff; //set this.filteredbuffer
     }
 
 }
@@ -387,3 +385,7 @@ export default WebAudio
 /**
  * [ws] load() -> [ws]loadBuffer() -> [ws] getArrayBuffer() http -> arrayBuffer length  -> [ws] loadArrayBuffer() { -> [ws] decodeArrayBuffer () { [wa] decodeArrayBuffer... done? then [ws]loadDecodedBuffer.. -> [wa] load() -> createBufferSource() via offlinecontext}}
  */
+
+//https://chinmay.audio/iirfilter-workshop/ iirfilternode to check
+//b=[ 1, -1.2621407508850098, 0.8533923625946045, 1, -1.225411295890808, 0.612431526184082, 1, -1.7005388736724854, 0.7515528202056885, 1, -1.9520241022109985, 0.9528384208679199]
+//a=[0.1658635704779951, -0.17049753937028886, 0.004650211082637766, 0.6367747847741175, -0.655921592250425, 0.04247856434965213, 0.48852423462836897, 0.3494028802722561, 0.015667778677698384, 0.4142467303456515, -0.44225218786636344, 0.41445194667817475]

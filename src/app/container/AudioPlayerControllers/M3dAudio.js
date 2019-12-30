@@ -9,20 +9,36 @@ export const subjects = {
 };
 
 class M3dAudio {
-    constructor(params) {
+    constructor() {
         this.web_audio = null;
         this.array_buffer = null;
         this.audio_buffer = null;
         this.savedVolume = 1; //default 1
         this.isMuted = false; //default 1
+        this.defaultFilter = null;
+        this.filters = null;
+        this.filterId = null;
+        this.selectedFilter = null; //new filter selected by user
+        this.web_audio_state = 'unready'; //default
     }
 
-    create() {
+    create(params) {
         this.web_audio = new WebAudio();
+        this.filters = params.filters;
+        this.defaultFilter = params.filterId; //filterId recorded from mobile app
         this.web_audio.init();
-        subjects.webAudio_state.subscribe((i) => subjects.m3dAudio_state.next(i));
+        subjects.webAudio_state.subscribe((i) => {
+            this.web_audio_state = i;
+            subjects.m3dAudio_state.next(i)
+        });
     }
 
+    /*
+    * 1. get arraybuffer from url
+    * 2. decodeArraybuffer
+    * 3. set clean buffer in webaudio.js for future reuse + create new buffersource
+    * 4. apply filter using defaultFilter.
+    * */
     async load(url) {
         const ab = await this.getArrayBuffer(url);
         this.loadArrayBuffer(ab);
@@ -37,6 +53,18 @@ class M3dAudio {
         this.array_buffer = arrayBuffer;
         this.audio_buffer = await this.web_audio.decodeArrayBuffer(arrayBuffer);
         this.web_audio.loadAudioBuffer(this.audio_buffer);
+        this.changeFilter(this.defaultFilter); //do not remove
+    }
+
+    changeFilter(newFilterId) {
+        if (this.web_audio_state === 'playing') {
+            this.web_audio.pause();
+        }
+        if (newFilterId !== this.selectedFilter) {
+            const newCoef = this.filters.find(f => f.filterID === newFilterId).coefficients;
+            this.web_audio.applyFilter(newCoef);
+            this.selectedFilter = newFilterId;
+        }
     }
 
     playPause() {
@@ -57,22 +85,8 @@ class M3dAudio {
     }
 
     setVolume(value) {
-        /*if(value === 0){
-            if(this.gainState) {
-                console.log('here')
-                this.web_audio.gainNode.disconnect();
-            }
-        }else {
-            if(!this.gainState) {
-                this.web_audio.source.connect(this.web_audio.gainNode);
-                this.web_audio.setGain(value);
-            }
-        }*/
-        // console.log('m3daudio', value);
         this.savedVolume = value;
-        if (this.savedVolume === 0) {
-            this.isMuted = true;
-        }
+        if (this.savedVolume === 0) this.isMuted = true;
         this.isMuted = false;
         this.web_audio.setGain(this.savedVolume);
     }

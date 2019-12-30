@@ -1,9 +1,7 @@
 import React, {Component} from 'react';
-import WebAudio from "./AudioPlayerControllers/WebAudio";
-import HttpFetch from "./AudioPlayerControllers/util/HttpFetch";
-import M3dAudio from './AudioPlayerControllers/M3dAudio'
-import {subjects} from './AudioPlayerControllers/M3dAudio'
-
+import M3dAudio from './AudioPlayerControllers/M3dAudio';
+import {subjects} from './AudioPlayerControllers/M3dAudio';
+import PropTypes from 'prop-types';
 class AudioPlayer extends Component {
     constructor(props) {
         super(props);
@@ -12,14 +10,15 @@ class AudioPlayer extends Component {
             percent: 0,
             m3dAudio: null,
             gain: 1,
-            status:'unready'
+            status: 'unready',
+            filterId:'F7',
         }
     }
 
     async componentDidMount() {
         const m3dAudio = new M3dAudio();
-        m3dAudio.create();
-        await m3dAudio.load('https://firebasestorage.googleapis.com/v0/b/podstetheedata.appspot.com/o/human_samples%2F-LvrfS3FUwxCIH8_3uT3.wav?alt=media&token=24d4a22a-793f-4d10-b2cb-3345e188fb6b');
+        m3dAudio.create({filters:this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
+        await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
     }
@@ -39,8 +38,8 @@ class AudioPlayer extends Component {
     }
 
     //TODO: export to ./AudioPlayerControllers/constants/index.js
-    renderStatus(){
-        switch (this.state.status){
+    renderStatus() {
+        switch (this.state.status) {
             case 'unready':
                 return 'preparing';
             case 'ready':
@@ -54,8 +53,21 @@ class AudioPlayer extends Component {
         }
     }
 
+    changeFilter = (e) => {
+        this.state.m3dAudio.changeFilter(e.target.value);
+    };
+
+    renderOptions() {
+        let options = [];
+        this.props.filters.map((f) => options.push(<option key={f.filterID} value={f.filterID}>{f.labelName}</option>));
+        return options;
+    }
+
     render() {
         return <div>
+            <select defaultValue={this.state.filterId} onChange={this.changeFilter}>
+                {this.renderOptions()}
+            </select>
             <button disabled={this.state.status === 'unready'} onClick={this.play}>{this.renderStatus()}</button>
             <hr/>
             <div>
@@ -70,5 +82,11 @@ class AudioPlayer extends Component {
         </div>
     }
 }
+
+AudioPlayer.propTypes={
+    filters:PropTypes.array.isRequired,
+    filterId: PropTypes.string.isRequired,
+    url:PropTypes.string.isRequired
+};
 
 export default AudioPlayer
