@@ -3,6 +3,7 @@ import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
 
 export const subjects = {
+    m3dAudio_state: new Subject(),
     webAudio_scriptNode_onaudioprocess: new Subject(),
     webAudio_state: new Subject(),
 };
@@ -19,7 +20,7 @@ class M3dAudio {
     create() {
         this.web_audio = new WebAudio();
         this.web_audio.init();
-        subjects.webAudio_state.subscribe((i) => console.log('status', i))
+        subjects.webAudio_state.subscribe((i) => subjects.m3dAudio_state.next(i));
     }
 
     async load(url) {
@@ -35,23 +36,6 @@ class M3dAudio {
     async loadArrayBuffer(arrayBuffer) {
         this.array_buffer = arrayBuffer;
         this.audio_buffer = await this.web_audio.decodeArrayBuffer(arrayBuffer);
-        /*     const input = this.audio_buffer.getChannelData(0).slice();
-             const output = this.audio_buffer.getChannelData(0).slice();
-             let _coef =   [...];
-             let d = [0, 0];
-             let maxes = [];
-             for (let j = 0; j < _coef.length; j += 1) {
-                 for (let i = 0; i < this.audio_buffer.length; i++) {
-                     output[i] = _coef[j].ff[0] * input[i] + d[0];
-                     d[0] = _coef[j].ff[1] * input[i] - _coef[j].fb[1] * output[i] + d[1];
-                     d[1] = _coef[j].ff[2] * input[i] - _coef[j].fb[2] * output[i];
-                     input[i] = output[i];
-                     maxes.push(output[i]);
-                     output[i] = output[i];
-                 }
-                 d[0] = d[1] = 0;
-             }
-             this.audio_buffer.copyToChannel(output, 0);*/ //works but i think memory footprint is going to be really high
         this.web_audio.loadAudioBuffer(this.audio_buffer);
     }
 
@@ -89,7 +73,7 @@ class M3dAudio {
         if (this.savedVolume === 0) {
             this.isMuted = true;
         }
-        this.isMuted=false;
+        this.isMuted = false;
         this.web_audio.setGain(this.savedVolume);
     }
 
@@ -115,5 +99,6 @@ z222 = x * biquad[2] – biquad[4] * y;
  */
 
 //webaudio api gain node, filter and etc etc https://www.html5rocks.com/en/tutorials/webaudio/intro/
+//webaudio api example and demo https://webaudioapi.com/samples/ , github repo: https://github.com/borismus/webaudioapi.com/blob/master/content/posts/filter/filter-sample.js
 
 export default M3dAudio;

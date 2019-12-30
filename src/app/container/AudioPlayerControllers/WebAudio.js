@@ -2,6 +2,7 @@ import {Observable} from "rxjs";
 import {subjects} from './M3dAudio';
 import {SUSPENDED, PLAYING, PAUSED, FINISHED} from './constants';
 import {BELL_FILTER, HEART_FILTER, listOfFilter} from "./constants/filterschema";
+import Fili from 'fili';
 
 class WebAudio {
     static scriptBufferSize = 512;
@@ -48,6 +49,7 @@ class WebAudio {
     constructor(params) {
         // this.subjects = subjects;
         this.buffer = null;
+        this.filteredBuffer = null;
         this.audioContext = this.getAudioContext();
         this.offlineAudioContext = null;
         this.scriptNode = null; //AudioScriptProcessor
@@ -119,7 +121,8 @@ class WebAudio {
         this.lastPlay = this.audioContext.currentTime;
         this.buffer = audioBuffer;
         this.createBufferSource();
-        console.log('d') //meaning done here. TODO: subject next() here
+        subjects.webAudio_state.next('ready');
+
     }
 
     //https://chinmay.audio/iirfilter-workshop/ iirfilternode to check
@@ -137,9 +140,8 @@ class WebAudio {
     createBufferSource() {
         this.disconnectBufferSource();
         this.source = this.audioContext.createBufferSource();
-        this.source.buffer = this.buffer;
-
         this.applyFilter();
+        this.source.buffer = this.filteredBuffer; //always use filteredBuffer to play
 
         // not anymore
         // TODO : add this.source.connect(xxNode) //xxNode = audio effects filter. refs:https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
@@ -315,23 +317,50 @@ class WebAudio {
         if (this.source) this.source.disconnect();
     }
 
-    //TODO: ~~clone this.buffer and apply the coefs~~ try using iirfilternode //done
-    //TODO: clean up iirfilter when pause and changes of filter
+    //TODO: ~~clone this.buffer and apply the coefs~~
+    // TODO: ~~try using iirfilternode //done~~ 29/12/2019. Nevermind, iirfilternode class only has getFrequencyResponse() not the time-domain method Im looking for to plot graph. 30/12/2019
+    //TODO: clean up ~~iirfilter~~ when pause and changes of filter
     applyFilter() {
         const coef = BELL_FILTER.coefficients;
 
+        /* //the iirfilternode from webaudioapi
         coef.map((f, i) => {
-            const iirFilter = this.audioContext.createIIRFilter(f.ff, f.fb);
-            if (i === coef.length - 1) this.source.connect(iirFilter).connect(this.audioContext.destination);
-            else this.source.connect(iirFilter);
-        })
-        //above loop is equivalent to below
-        //I think codes below are better for changing filter via dropdown menu since changing filter only requires  iirFilter1 to be disconnected.
-       /* const iirFilter1 = this.audioContext.createIIRFilter(coef[0].ff, coef[0].fb);
+                 const iirFilter = this.audioContext.createIIRFilter(f.ff, f.fb);
+                 if (i === coef.length - 1) this.source.connect(iirFilter).connect(this.audioContext.destination);
+                 else this.source.connect(iirFilter);
+             });
+        //coef loop is equivalent to code below. Code below is easier to track in order to disconnect when user changes new filter. To disconnect filter, only disconnect first iirfilter
+        const iirFilter1 = this.audioContext.createIIRFilter(coef[0].ff, coef[0].fb);
         const iirFilter2 = this.audioContext.createIIRFilter(coef[1].ff, coef[1].fb);
         const iirFilter3 = this.audioContext.createIIRFilter(coef[2].ff, coef[2].fb);
         const iirFilter4 = this.audioContext.createIIRFilter(coef[3].ff, coef[3].fb);
-        this.source.connect(iirFilter1).connect(iirFilter2).connect(iirFilter3).connect(iirFilter4).connect(this.audioContext.destination)*/
+        this.source.connect(iirFilter1).connect(iirFilter2).connect(iirFilter3).connect(iirFilter4).connect(this.audioContext.destination);*/
+
+        const input = this.buffer.getChannelData(0).slice();
+        const outputBuff = this.audioContext.createBuffer(this.buffer.numberOfChannels, this.buffer.length, this.buffer.sampleRate)
+        let output = outputBuff.getChannelData(0);
+        let d = [0, 0]; //temp array to hold n-1 and n-2
+
+
+        for (let j = 0; j < coef.length; j += 1) {
+            for (let i = 0; i < this.buffer.length; i++) {
+                //b = ff, a = fb, references from formula to coef
+                /* //iirfilter formula from superpowered.com : y[n] = (b0/a0)*x[n] + (b1/a0)*x[n-1] + (b2/a0)*x[n-2] - (a1/a0)*y[n-1] - (a2/a0)*y[n-2]
+                output[i] = (coef[j].ff[0] / coef[j].fb[0]) * input[i] + d[0];
+                d[0] = ((coef[j].ff[1] / coef[j].fb[0]) * input[i]) - ((coef[j].fb[1] / coef[j].fb[0]) * output[i]) + d[1];
+                d[1] = ((coef[j].ff[2] / coef[j].fb[0]) * input[i]) - ((coef[j].fb[2] / coef[j].fb[0]) * output[i]);
+                input[i] = output[i];*/
+
+                //not sure where we get this formula from but it is there since I was employed. 11.00am@30/12/2019. This is biquad filter formula? 11.25am@30/12/2019
+                //biquad formula: y(n)=b0x(n)+ b1x(n−1)+ b2x(n−2) − a1y(n−1) −a2y(n−2) . source: https://arachnoid.com/BiQuadDesigner/index.html
+                output[i] = coef[j].ff[0] * input[i] + d[0];
+                d[0] = coef[j].ff[1] * input[i] - coef[j].fb[1] * output[i] + d[1];
+                d[1] = coef[j].ff[2] * input[i] - coef[j].fb[2] * output[i];
+                input[i] = output[i];
+            }
+            d[0] = d[1] = 0; //optIn or out? if in, value = -e7, out, value = 18 f points
+        }
+        this.filteredBuffer = outputBuff;
     }
 
 }
