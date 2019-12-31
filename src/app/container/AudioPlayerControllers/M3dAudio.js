@@ -72,6 +72,7 @@ class M3dAudio {
     }
 
     play(start, end) {
+        console.log(this.web_audio.getPeaks(600,0 ,20))
         // this.fireEvent('interaction', () => this.play(start, end));
         if (this.isMuted) this.web_audio.setGain(0);
         this.web_audio.setGain(this.savedVolume);

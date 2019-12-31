@@ -84,6 +84,11 @@ class WebAudio {
         this.lastPlay = this.audioContext.currentTime;
         //loop the audio
         this.loop = false;
+
+
+        this.mergedPeaks = null;
+        this.splitPeaks = null;
+        this.peaks = null;
     }
 
     init() {
@@ -310,6 +315,83 @@ class WebAudio {
     getDuration() {
         if (!this.buffer) return 0;
         return this.buffer.duration;
+    }
+
+    setLength(length) {
+        // No resize, we can preserve the cached peaks.
+        if (this.mergedPeaks && length == 2 * this.mergedPeaks.length - 1 + 2) {
+            return;
+        }
+
+        this.splitPeaks = [];
+        this.mergedPeaks = [];
+        // Set the last element of the sparse array so the peak arrays are
+        // appropriately sized for other calculations.
+        const channels = this.filteredBuffer ? this.filteredBuffer.numberOfChannels : 1;
+        let c;
+        for (c = 0; c < channels; c++) {
+            this.splitPeaks[c] = [];
+            this.splitPeaks[c][2 * (length - 1)] = 0;
+            this.splitPeaks[c][2 * (length - 1) + 1] = 0;
+        }
+        this.mergedPeaks[2 * (length - 1)] = 0;
+        this.mergedPeaks[2 * (length - 1) + 1] = 0;
+    }
+
+
+    getPeaks(length, first, last) {
+        if (this.peaks) return this.peaks; //not going to feed in peak data
+        if (!this.buffer) return []; //usually not going to happen
+
+        first = first || 0;
+        last = last || length - 1;
+
+        this.setLength(length);
+
+        if (!this.buffer) return this.mergedPeaks; //usually not going to happen
+
+        /**
+         * The following snippet fixes a buffering data issue on the Safari
+         * browser which returned undefined It creates the missing buffer based
+         * on 1 channel, 4096 samples and the sampleRate from the current
+         * webaudio context 4096 samples seemed to be the best fit for rendering
+         * will review this code once a stable version of Safari TP is out
+         */
+        if (!this.buffer.length) {
+            const newBuffer = this.audioContext.createBuffer(1, 4096, this.buffer.sampleRate);
+            this.buffer = newBuffer.buffer;
+        }
+
+        const sampleSize = this.filteredBuffer.length / length;
+        const sampleStep = ~~(sampleSize / 10) || 1; //not sure why step = sampleSize/10
+
+        const peaks = this.splitPeaks[0];
+        const channelData = this.filteredBuffer.getChannelData(0);
+        let i;
+
+        //0 to widht of the canvas aka 600
+        for (i = first; i <= last; i++) {
+            const start = ~~(i * sampleSize);
+            const end = ~~(start + sampleSize);
+            //start = 0 , end = 1600 and incremental step = 1600
+
+            let min = 0;
+            let max = 0;
+            let j;
+
+            //for every 160 (sampleStep) get the min and max value
+            for (j = start; j < end; j += sampleStep) {
+                const value = channelData[j];
+                if (value > max) max = value;
+                if (value < min) min = value;
+            }
+
+            peaks[2 * i] = max;
+            peaks[2 * i + 1] = min;
+            this.mergedPeaks[2 * i] = max;
+            this.mergedPeaks[2 * i + 1] = min;
+        }
+        return this.mergedPeaks;
     }
 
     disconnectBufferSource() {

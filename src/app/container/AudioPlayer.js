@@ -16,6 +16,29 @@ class AudioPlayer extends Component {
     }
 
     async componentDidMount() {
+        /*
+        Wavesurfer.js
+            1. createDrawer() -> drawer.multicanvas.js extends drawer.js ->
+              1.5.1 createWrapper() from drawer.js
+              1.5.2 createElements() in multicanvas.js
+
+              1.5.1 -> create 'wave' element which has click, dblclick and scroll events
+
+              1.5.2 -> create another 'wave' element -> add two canvases (a. wave canvas, b. progress canvas = if user seeks to the middle of the canvas, left-hand side of the canvas is darker in color)
+
+            2. createBackend() .. create all audiocontext, scriptprocessor, gain etc etc
+            3. load() is called after drawer, backend are created via fireEvents
+            4. load url + decode + load arraybuffer + empty()
+            5. once finished loading arraybuffer to audiocontext and etc etc, drawBuffer() is called
+            6. ws.drawBuffer() calls backend.getPeaks():WebAudio then drawer.drawPeaks():Drawer
+            7. in drawer.drawPeaks(), it calls drawWave(), which is an empty method initially but details are implemented in 1. because of MultiCanvas extends Drawer
+            8. drawWave() -> 8.1 Multicanvas.drawLines (crucial) -> entry.drawLine //using peak
+                          -> 8.2 Multicanvas.fillRect to draw a median line
+
+               8.1 -> a. fill the style with color
+                      b. uses 2dcontext from 1.5.2.a to draw line and 1.5.2.b to draw progress line
+
+         */
         const m3dAudio = new M3dAudio();
         m3dAudio.create({filters:this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
