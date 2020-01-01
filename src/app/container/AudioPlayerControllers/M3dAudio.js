@@ -11,6 +11,7 @@ export const subjects = {
 class M3dAudio {
     constructor() {
         this.web_audio = null;
+        this.drawer = null;
         this.array_buffer = null;
         this.audio_buffer = null;
         this.savedVolume = 1; //default 1
@@ -23,14 +24,23 @@ class M3dAudio {
     }
 
     create(params) {
-        this.web_audio = new WebAudio();
+        //set m3daudio properties
         this.filters = params.filters;
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
+
+        //audio
+        this.web_audio = new WebAudio();
+
         this.web_audio.init();
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
             subjects.m3dAudio_state.next(i)
         });
+
+        //drawing
+        this.container = document.querySelector(params.container); //container is strictly valid of string type
+        if(!this.container) throw new Error('container is not found. create one a div with id and pass into param when creating m3daudio object')
+
     }
 
     /*
@@ -72,7 +82,7 @@ class M3dAudio {
     }
 
     play(start, end) {
-        console.log(this.web_audio.getPeaks(600,0 ,20))
+        console.log(this.web_audio.getPeaks(600, 0, 20))
         // this.fireEvent('interaction', () => this.play(start, end));
         if (this.isMuted) this.web_audio.setGain(0);
         this.web_audio.setGain(this.savedVolume);

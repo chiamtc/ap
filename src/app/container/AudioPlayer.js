@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import M3dAudio from './AudioPlayerControllers/M3dAudio';
 import {subjects} from './AudioPlayerControllers/M3dAudio';
 import PropTypes from 'prop-types';
+
 class AudioPlayer extends Component {
     constructor(props) {
         super(props);
@@ -11,7 +12,7 @@ class AudioPlayer extends Component {
             m3dAudio: null,
             gain: 1,
             status: 'unready',
-            filterId:'F7',
+            filterId: 'F7',
         }
     }
 
@@ -31,19 +32,25 @@ class AudioPlayer extends Component {
             4. load url + decode + load arraybuffer + empty()
             5. once finished loading arraybuffer to audiocontext and etc etc, drawBuffer() is called
             6. ws.drawBuffer() calls backend.getPeaks():WebAudio then drawer.drawPeaks():Drawer
-            7. in drawer.drawPeaks(), it calls drawWave(), which is an empty method initially but details are implemented in 1. because of MultiCanvas extends Drawer
+            7. in drawer.drawPeaks(),
+                7.1 calls drawer.setWidth() -> multicanvas.updateSize() -> ( multicanvas.updateDimensions()  -> entry.updateDimensions()) to update both wave and progress wave dimension in the if statement
+                7.2 it calls drawWave(),which is an empty method initially but details are implemented in 1. because of MultiCanvas extends Drawer
             8. drawWave() -> 8.1 Multicanvas.drawLines (crucial) -> entry.drawLine //using peak
                           -> 8.2 Multicanvas.fillRect to draw a median line
 
                8.1 -> a. fill the style with color
                       b. uses 2dcontext from 1.5.2.a to draw line and 1.5.2.b to draw progress line
 
+
+            ** in the case of zooming in/out, it repeats from step 7.1 based the value of params.minPxPerSec
+
          */
         const m3dAudio = new M3dAudio();
-        m3dAudio.create({filters:this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
+        m3dAudio.create({container: '#waveform-container', filters: this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
+        document.querySelector('#waveform-container').appendChild(document.createElement('wave'));
     }
 
     play = () => {
@@ -102,14 +109,15 @@ class AudioPlayer extends Component {
                 <p>play time: {this.state.time} s</p>
                 <p>played percentage: {this.state.percent} % </p>
             </div>
+            <div id="waveform-container"></div>
         </div>
     }
 }
 
-AudioPlayer.propTypes={
-    filters:PropTypes.array.isRequired,
+AudioPlayer.propTypes = {
+    filters: PropTypes.array.isRequired,
     filterId: PropTypes.string.isRequired,
-    url:PropTypes.string.isRequired
+    url: PropTypes.string.isRequired
 };
 
 export default AudioPlayer
