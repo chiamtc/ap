@@ -4,6 +4,9 @@ import WaveCanvas from './WaveCanvas';
 import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
 
+//tobe removed :experimental only
+import Style from './util/Style';
+
 export const subjects = {
     m3dAudio_state: new Subject(),
     webAudio_scriptNode_onaudioprocess: new Subject(),
@@ -36,21 +39,40 @@ class M3dAudio {
 
         //instantiations
         this.web_audio = new WebAudio();
-        this.wave_wrapper = new WaveWrapper({container_id:params.container_id, height:200});
-        this.wave_canvas = new WaveCanvas(this.wave_wrapper, {pixelRatio: window.devicePixelRatio, maxCanvasWidth:4000});
+        this.wave_wrapper = new WaveWrapper({container_id: params.container_id, height: 200});
+        this.wave_canvas = new WaveCanvas(this.wave_wrapper, {
+            pixelRatio: window.devicePixelRatio,
+            maxCanvasWidth: 4000
+        });
 
         //audio
         this.web_audio.init();
-        subjects.webAudio_state.subscribe((i) => {
-            this.web_audio_state = i;
-            subjects.m3dAudio_state.next(i)
-        });
 
         //wave_wrapper:HTMLElement
         this.wave_wrapper.init(); //TODO: put this in createWrapper() and listen to interaction via subject by subscribing to it
 
         //wave_cavnas:Canvas. wave_wrapper has to be initialised before wave_canvas.
         this.wave_canvas.init(); //TODO: put this in createCanvas() and listen to interaction via subject by subscribing to it
+
+        //listeners
+        subjects.webAudio_state.subscribe((i) => {
+            this.web_audio_state = i;
+            subjects.m3dAudio_state.next(i)
+        });
+
+        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i)=>{
+            Style(this.wave_wrapper.progressWave_wrapper, {display: 'block', width: i/this.getDuration() *600 + "px"});
+        })
+
+        subjects.waveWrapper_state.subscribe((i) => {
+            switch (i.type) {
+                case 'click':
+                    this.seekTo(i.progress);
+                    break;
+                case 'dblclick':
+                    break;
+            }
+        });
     }
 
     /*
@@ -116,7 +138,20 @@ class M3dAudio {
         return this.web_audio.getGain();
     }
 
-    getCurrentTime(cb) {
+    getDuration() {
+        return this.web_audio.getDuration()
+    }
+
+    getCurrentTime() {
+        return this.web_audio.getCurrentTime();
+    }
+
+    seekTo(seekToTime){
+        this.web_audio.seekTo(seekToTime * this.getDuration());
+        Style(this.wave_wrapper.progressWave_wrapper, {display: 'block', width: seekToTime * 600 + "px"});
+    }
+
+    getOnAudioProcessTime(cb) {
         subjects.webAudio_scriptNode_onaudioprocess.subscribe((res) => {
             const percent = this.web_audio.getPlayedPercents() * 100;
             cb({percent: percent.toFixed(2), ms: res.toFixed(2)});

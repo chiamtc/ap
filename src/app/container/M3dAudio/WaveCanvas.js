@@ -19,6 +19,12 @@ export default class WaveCanvas {
     }
 
     init() {
+        this.createMainWaveWrapperCanvas();
+        this.createProgressWaveWrapperCanvas();
+        this.addCursor();
+    }
+
+    createMainWaveWrapperCanvas() {
         const mainWave_canvas = document.createElement('canvas');
         style(mainWave_canvas, {
             position: 'absolute',
@@ -29,6 +35,12 @@ export default class WaveCanvas {
             height: '100%',
             pointerEvents: 'none'
         });
+        mainWave_canvas.getContext('2d', {desynchronized: true});
+        this.wave_wrapper.mainWave_wrapper.appendChild(mainWave_canvas);
+        this.mainWave_canvas = mainWave_canvas;
+    }
+
+    createProgressWaveWrapperCanvas() {
         const progressWave_canvas = document.createElement('canvas');
         style(progressWave_canvas, {
             position: 'absolute',
@@ -37,18 +49,12 @@ export default class WaveCanvas {
             bottom: 0,
             height: '100%'
         });
-        mainWave_canvas.getContext('2d', {desynchronized: true});
         progressWave_canvas.getContext('2d', {desynchronized: true});
-
-        this.wave_wrapper.mainWave_wrapper.appendChild(mainWave_canvas);
         this.wave_wrapper.progressWave_wrapper.appendChild(progressWave_canvas);
-
-        this.mainWave_canvas = mainWave_canvas;
         this.progressWave_canvas = progressWave_canvas;
-        this.updateCursor();
     }
 
-    updateCursor() {
+    addCursor() {
         style(this.wave_wrapper.progressWave_wrapper, {
             borderRightWidth: '1px',
             borderRightColor: 'red'

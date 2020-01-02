@@ -55,7 +55,7 @@ class AudioPlayer extends Component {
     play = () => {
         this.state.m3dAudio.playPause();
         //TODO: make this a subject from frontend and subscribes to M3daudio's getCurrentTime
-        this.state.m3dAudio.getCurrentTime((res) => {
+        this.state.m3dAudio.getOnAudioProcessTime((res) => {
             this.setState({time: res.ms, percent: res.percent});
         })
     }

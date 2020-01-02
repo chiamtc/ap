@@ -1,4 +1,5 @@
 import style from './util/Style';
+import {subjects} from "./M3dAudio";
 
 export default class WaveWrapper {
 
@@ -50,6 +51,7 @@ export default class WaveWrapper {
             display: 'block',
             position: 'relative',
             height: `${this.height}px`,
+            border:'1px solid black'
         });
         if (this.fill || this.scroll) {
             style(wrapper, {
@@ -104,7 +106,8 @@ export default class WaveWrapper {
         } else {
             progress = ((clientX - bbox.left) + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
         }
-        return progress; //return float point corresponding to the width of mainWave_wrapper
+        subjects.waveWrapper_state.next({type:e.type, progress});
+        // return progress; //return float point corresponding to the width of mainWave_wrapper
     }
 
     getWidth() {
@@ -126,7 +129,23 @@ export default class WaveWrapper {
             borderRightStyle: 'solid',
             pointerEvents: 'none'
         });
-        this._progressWave_wrapper = this._container.appendChild(wrapper);
+        //append progress wave onto mainWave_wrapper so that it doesn't clip outside of mainwave_wrapper since we're going to add backgroudncolor
+        //reason: position absolute;
+        /**
+         * if we append using this.container. | = progresswave, l = mainwave
+         *          |
+         *    ______|_____
+         *   l      |     l
+         *   l______|_____l
+         *          |
+         *
+         * if we append using this.mainWave_wrapper
+         *
+         *    ____________
+         *   l      |     l
+         *   l______|_____l
+         */
+        this._progressWave_wrapper = this.mainWave_wrapper.appendChild(wrapper);
     }
 
     get container() {
