@@ -73,11 +73,8 @@ class M3dAudio {
         });
 
         subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => {
-            /*  style(this.wave_wrapper.progressWave_wrapper, {
-                  display: 'block',
-                  width: i / this.getDuration() * 600 + "px"
-              });*/
-        })
+            this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
+        });
 
         subjects.waveWrapper_state.subscribe((i) => {
             switch (i.type) {
@@ -149,9 +146,16 @@ class M3dAudio {
                 this.params.barWidth ? this.drawBars(peaks, 0, start, end) : this.drawWave(peaks, 0, start, end);
                    }
          */
-        //set wrapper width then updates canvas size based on wrapper's width, clear the canvas and draw again
+        /**
+                1. set wrapper width -
+                2. updates canvas size based on wrapper's width -
+                3. clear the canvas and draw again
+         setWidth(){
+            updatesize() {... canvas.updateDimension() ...}
+         }
+         */
         this.wave_wrapper.setWidth(width);
-        this.wave_canvas.clearWave(); //temprorarily commented it out
+        this.wave_canvas.clearWave();
         // this.wave_canvas.drawLines(peaks, 0, start, end); //TODO << draw
     }
 
@@ -192,8 +196,15 @@ class M3dAudio {
     }
 
     seekTo(seekToTime) {
+        //TODO: commented block from ws, check them
+        const paused = this.web_audio.isPaused();
+        if (!paused) this.web_audio.pause(); //pause and render, it's paused in webaudio.addOnAudioProcess() 2nd if else clause
+       /* const oldScrollParent = this.params.scrollParent;
+        this.params.scrollParent = false;*/
         this.web_audio.seekTo(seekToTime * this.getDuration());
-        style(this.wave_wrapper.progressWave_wrapper, {display: 'block', width: seekToTime * this.wave_wrapper.getWidth() + "px"});
+        this.wave_wrapper.renderProgressWave(seekToTime); //TODO: setTimeout ?
+         if (!paused) this.web_audio.play();
+        // this.params.scrollParent = oldScrollParent;
     }
 
     getOnAudioProcessTime(cb) {

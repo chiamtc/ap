@@ -16,8 +16,10 @@ export default class WaveWrapper {
 
         this._progressWave_wrapper = null;
 
+        this.lastPos = 0;
         this.fill = params.fill || true; //boolean indication to display whole wave
         this.scroll = params.scroll || false; //boolean indication to allow scrolling horizontally
+        this.autoCenter = true; //hardcoded
         this.pixelRatio = params.pixelRatio;
         this.wave_canvas = null;
     }
@@ -117,7 +119,7 @@ export default class WaveWrapper {
     }
 
     setWidth(width) {
-        if (this.width == width) return false;
+        if (this.width === width) return false;
 
         this.width = width;
 
@@ -133,11 +135,60 @@ export default class WaveWrapper {
         return true;
     }
 
+    renderProgressWave(progress) {
+        const minPxDelta = 1 / this.pixelRatio;
+        const pos = Math.round(progress * this.width);
+
+        if (pos < this.lastPos || pos - this.lastPos >= minPxDelta) {
+            this.lastPos = pos;
+            if (this.scroll && this.autoCenter) {
+                const newPos = ~~(this.mainWave_wrapper.scrollWidth * progress);
+                this.recenterOnPosition(newPos, true);
+            }
+            style(this.progressWave_wrapper, {display:'block',width: `${pos}px`});
+        }
+    }
+
+    recenterOnPosition(position, immediate) {
+        const scrollLeft = this.mainWave_wrapper.scrollLeft;
+        //if canvas is zoomed to certain px.
+        // scrollLeft is updated while playing
+        // clientWidth is constant 600px
+        // scrollWidth is the width after being zoomed
+        const half = ~~(this.mainWave_wrapper.clientWidth / 2); //300
+        const maxScroll = this.mainWave_wrapper.scrollWidth - this.mainWave_wrapper.clientWidth; //maximum value to scroll aka, the end usually
+        let target = position - half;
+        let offset = target - scrollLeft;
+
+        if (maxScroll == 0) return;
+
+        // if the cursor is currently visible... //not executed if I dont set immediate
+        if (!immediate && -half <= offset && offset < half) {
+            // set rate at which waveform is centered
+            let rate = 5; //tweakable
+
+            // make rate depend on width of view and length of waveform
+            rate /= half;
+            rate *= maxScroll;
+
+            offset = Math.max(-rate, Math.min(rate, offset));
+            target = scrollLeft + offset;
+        }
+
+        // limit target to valid range (0 to maxScroll)
+        target = Math.max(0, Math.min(maxScroll, target));
+        // no use attempting to scroll if we're not moving
+        if (target != scrollLeft) {
+            this.mainWave_wrapper.scrollLeft = target;
+        }
+    }
+
+    //this function adds initialised canvases from m3daudio to this class so that it could update dimension of canvases in updateSize()
+    //reasons 1. one wrapper can have multiple canvases 2. canvas' job is to clear and draw lines nothing to do with wrapper's updating size. 3. wrapper updates size followed by canvases 4. most properties used to update canvases size is in wrapper class
     addCanvases(waveCanvas, mainWaveCanvas, progressWaveCanvas) {
-        this.wave_canvas =waveCanvas;
+        this.wave_canvas = waveCanvas;
         this.mainWave_wrapper.appendChild(mainWaveCanvas);
         this.progressWave_wrapper.appendChild(progressWaveCanvas);
-
     }
 
     updateSize() {
@@ -147,7 +198,7 @@ export default class WaveWrapper {
           */
         const elementWidth = Math.round(this.getWidth() / this.pixelRatio);
         const totalWidth = Math.round(this.getWidth() / this.pixelRatio);
-        this.wave_canvas.updateDimensions(elementWidth, totalWidth, this.getWidth(), this.height); //TODO solve this
+        this.wave_canvas.updateDimensions(elementWidth, totalWidth, this.getWidth(), this.height);
     }
 
     addCursor() {

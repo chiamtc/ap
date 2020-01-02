@@ -1,32 +1,14 @@
 import style from './util/Style';
 
 export default class WaveCanvas {
-    get mainWave_canvas() {
-        return this._mainWave_canvas;
-    }
-
-    set mainWave_canvas(value) {
-        this._mainWave_canvas = value;
-    }
-
-    get progressWave_ctx() {
-        return this._progressWave_ctx;
-    }
-
-    set progressWave_ctx(value) {
-        this._progressWave_ctx = value;
-    }
-    constructor(params) {
+    constructor() {
         this.start = 0;
         this.end = 1;
-
         this._mainWave_canvas = null;
         this.mainWave_ctx = null;
         this.progressWave_canvas = null;
         this._progressWave_ctx = null;
-
         this.overlap = 2;
-
     }
 
     init() {
@@ -79,9 +61,24 @@ export default class WaveCanvas {
         style(this.progressWave_canvas, {...elementSize, display: 'block'});
     }
 
-
     clearWave() {
         this.mainWave_ctx.clearRect(0, 0, this.mainWave_ctx.canvas.width, this.mainWave_ctx.canvas.height);
         this._progressWave_ctx.clearRect(0, 0, this._progressWave_ctx.canvas.width, this._progressWave_ctx.canvas.height);
+    }
+
+    get mainWave_canvas() {
+        return this._mainWave_canvas;
+    }
+
+    set mainWave_canvas(value) {
+        this._mainWave_canvas = value;
+    }
+
+    get progressWave_ctx() {
+        return this._progressWave_ctx;
+    }
+
+    set progressWave_ctx(value) {
+        this._progressWave_ctx = value;
     }
 }

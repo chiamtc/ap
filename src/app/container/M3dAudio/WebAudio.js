@@ -85,7 +85,6 @@ class WebAudio {
         //loop the audio
         this.loop = false;
 
-
         this.mergedPeaks = null;
         this.splitPeaks = null;
         this.peaks = null;
