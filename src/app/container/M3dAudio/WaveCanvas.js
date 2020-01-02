@@ -1,27 +1,37 @@
 import style from './util/Style';
 
 export default class WaveCanvas {
-    constructor(wave_wrapper, params) {
-        if (!wave_wrapper) {
-            throw new Error('WaveCanvas is dependent on WaveWrapper. Pass WaveWrapper class object before initializing WaveCanvas class');
-        }
-        //WaveWrapper:HTMLElement
-        this.wave_wrapper = wave_wrapper;
-        this.maxCanvasWidth = params.maxCanvasWidth || 4000; //4k
-        this.maxCanvasElementWidth = Math.round(this.maxCanvasWidth / params.pixelRatio);
-        // this.hasProgressCanvas = params.waveColor != params.progressColor;
-        this.halfPixel = 0.5 / (params.pixelRatio || 1);
+    get mainWave_canvas() {
+        return this._mainWave_canvas;
+    }
 
+    set mainWave_canvas(value) {
+        this._mainWave_canvas = value;
+    }
 
-        this.mainWave_canvas = null;
+    get progressWave_ctx() {
+        return this._progressWave_ctx;
+    }
+
+    set progressWave_ctx(value) {
+        this._progressWave_ctx = value;
+    }
+    constructor(params) {
+        this.start = 0;
+        this.end = 1;
+
+        this._mainWave_canvas = null;
+        this.mainWave_ctx = null;
         this.progressWave_canvas = null;
+        this._progressWave_ctx = null;
+
+        this.overlap = 2;
 
     }
 
     init() {
         this.createMainWaveWrapperCanvas();
         this.createProgressWaveWrapperCanvas();
-        this.addCursor();
     }
 
     createMainWaveWrapperCanvas() {
@@ -35,9 +45,8 @@ export default class WaveCanvas {
             height: '100%',
             pointerEvents: 'none'
         });
-        mainWave_canvas.getContext('2d', {desynchronized: true});
-        this.wave_wrapper.mainWave_wrapper.appendChild(mainWave_canvas);
-        this.mainWave_canvas = mainWave_canvas;
+        this.mainWave_ctx = mainWave_canvas.getContext('2d', {desynchronized: true});
+        this._mainWave_canvas = mainWave_canvas;
     }
 
     createProgressWaveWrapperCanvas() {
@@ -47,17 +56,32 @@ export default class WaveCanvas {
             left: '0px',
             top: 0,
             bottom: 0,
-            height: '100%'
+            height: '100%',
+            background: '#28aae2' // I added myself //hardcoded
         });
-        progressWave_canvas.getContext('2d', {desynchronized: true});
-        this.wave_wrapper.progressWave_wrapper.appendChild(progressWave_canvas);
+        this._progressWave_ctx = progressWave_canvas.getContext('2d', {desynchronized: true});
         this.progressWave_canvas = progressWave_canvas;
     }
 
-    addCursor() {
-        style(this.wave_wrapper.progressWave_wrapper, {
-            borderRightWidth: '1px',
-            borderRightColor: 'red'
-        });
+    updateDimensions(elementWidth, totalWidth, width, height) {
+        this.start = this._mainWave_canvas.offsetLeft / totalWidth || 0;
+        this.end = this.start + elementWidth / totalWidth;
+
+        // set mainwave canvas dimensions
+        this._mainWave_canvas.width = width;
+        this._mainWave_canvas.height = height;
+        let elementSize = {width: elementWidth + 'px'};
+        style(this._mainWave_canvas, elementSize);
+
+        // set progresswave canvas dimensions and display block to make it visible
+        this.progressWave_canvas.width = width;
+        this.progressWave_canvas.height = height;
+        style(this.progressWave_canvas, {...elementSize, display: 'block'});
+    }
+
+
+    clearWave() {
+        this.mainWave_ctx.clearRect(0, 0, this.mainWave_ctx.canvas.width, this.mainWave_ctx.canvas.height);
+        this._progressWave_ctx.clearRect(0, 0, this._progressWave_ctx.canvas.width, this._progressWave_ctx.canvas.height);
     }
 }

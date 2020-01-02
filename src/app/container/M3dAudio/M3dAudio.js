@@ -5,7 +5,7 @@ import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
 
 //tobe removed :experimental only
-import Style from './util/Style';
+import style from './util/Style';
 
 export const subjects = {
     m3dAudio_state: new Subject(),
@@ -30,20 +30,29 @@ class M3dAudio {
         this.filterId = null;
         this.selectedFilter = null; //new filter selected by user
         this.web_audio_state = 'unready'; //default
+
+        this.minPxPerSec = 20; //for zoom
+        this.pixelRatio = window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI;
+
     }
 
     create(params) {
         //set m3daudio properties
         this.filters = params.filters;
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
+        this.minPxPerSec = params.minPxPerSec;
+
+        this.maxCanvasWidth = params.maxCanvasWidth || 4000; //4k
+        this.maxCanvasElementWidth = Math.round(this.maxCanvasWidth / this.pixelRatio);
 
         //instantiations
         this.web_audio = new WebAudio();
-        this.wave_wrapper = new WaveWrapper({container_id: params.container_id, height: 200});
-        this.wave_canvas = new WaveCanvas(this.wave_wrapper, {
-            pixelRatio: window.devicePixelRatio,
-            maxCanvasWidth: 4000
+        this.wave_wrapper = new WaveWrapper({
+            container_id: params.container_id,
+            height: 200,
+            pixelRatio: this.pixelRatio,
         });
+        this.wave_canvas = new WaveCanvas();
 
         //audio
         this.web_audio.init();
@@ -54,14 +63,20 @@ class M3dAudio {
         //wave_cavnas:Canvas. wave_wrapper has to be initialised before wave_canvas.
         this.wave_canvas.init(); //TODO: put this in createCanvas() and listen to interaction via subject by subscribing to it
 
+
+        this.wave_wrapper.addCanvases(this.wave_canvas, this.wave_canvas.mainWave_canvas, this.wave_canvas.progressWave_canvas);
+
         //listeners
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
             subjects.m3dAudio_state.next(i)
         });
 
-        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i)=>{
-            Style(this.wave_wrapper.progressWave_wrapper, {display: 'block', width: i/this.getDuration() *600 + "px"});
+        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => {
+            /*  style(this.wave_wrapper.progressWave_wrapper, {
+                  display: 'block',
+                  width: i / this.getDuration() * 600 + "px"
+              });*/
         })
 
         subjects.waveWrapper_state.subscribe((i) => {
@@ -96,6 +111,7 @@ class M3dAudio {
         this.audio_buffer = await this.web_audio.decodeArrayBuffer(arrayBuffer);
         this.web_audio.loadAudioBuffer(this.audio_buffer);
         this.changeFilter(this.defaultFilter); //do not remove
+        this.drawBuffer();
     }
 
     changeFilter(newFilterId) {
@@ -109,12 +125,41 @@ class M3dAudio {
         }
     }
 
+    drawBuffer() {
+        const nominalWidth = Math.round(this.getDuration() * this.minPxPerSec * this.pixelRatio);
+        const parentWidth = this.wave_wrapper.getWidth();
+        let width = nominalWidth;
+        // always start at 0 after zooming for scrolling : issue redraw left part
+        let start = 0;
+        let end = Math.max(start + parentWidth, width); //600 = Math.max between 600 and 400
+        // Fill container
+        if (this.wave_wrapper.fill && (!this.wave_wrapper.scroll || nominalWidth < parentWidth)) {
+            width = parentWidth;
+            start = 0;
+            end = width;
+        }
+        let peaks = this.web_audio.getPeaks(width, start, end);
+
+        //this is drawPeaks in ws
+        /**
+         *  drawPeaks() {
+                 if (!this.setWidth(length)) { //setWidth() { ... updatesize() ...}
+                    this.clearWave();
+                }
+                this.params.barWidth ? this.drawBars(peaks, 0, start, end) : this.drawWave(peaks, 0, start, end);
+                   }
+         */
+        //set wrapper width then updates canvas size based on wrapper's width, clear the canvas and draw again
+        this.wave_wrapper.setWidth(width);
+        this.wave_canvas.clearWave(); //temprorarily commented it out
+        // this.wave_canvas.drawLines(peaks, 0, start, end); //TODO << draw
+    }
+
     playPause() {
         return this.web_audio.isPaused() ? this.play() : this.pause();
     }
 
     play(start, end) {
-        console.log(this.web_audio.getPeaks(600, 0, 20))
         // this.fireEvent('interaction', () => this.play(start, end));
         if (this.isMuted) this.web_audio.setGain(0);
         this.web_audio.setGain(this.savedVolume);
@@ -146,9 +191,9 @@ class M3dAudio {
         return this.web_audio.getCurrentTime();
     }
 
-    seekTo(seekToTime){
+    seekTo(seekToTime) {
         this.web_audio.seekTo(seekToTime * this.getDuration());
-        Style(this.wave_wrapper.progressWave_wrapper, {display: 'block', width: seekToTime * 600 + "px"});
+        style(this.wave_wrapper.progressWave_wrapper, {display: 'block', width: seekToTime * this.wave_wrapper.getWidth() + "px"});
     }
 
     getOnAudioProcessTime(cb) {

@@ -18,6 +18,8 @@ export default class WaveWrapper {
 
         this.fill = params.fill || true; //boolean indication to display whole wave
         this.scroll = params.scroll || false; //boolean indication to allow scrolling horizontally
+        this.pixelRatio = params.pixelRatio;
+        this.wave_canvas = null;
     }
 
     /**
@@ -35,6 +37,7 @@ export default class WaveWrapper {
         this.createContainer();
         this.createMainWaveWrapper();
         this.createProgressWaveWrapper();
+        this.addCursor();
     }
 
     createContainer() {
@@ -51,7 +54,6 @@ export default class WaveWrapper {
             display: 'block',
             position: 'relative',
             height: `${this.height}px`,
-            border:'1px solid black'
         });
         if (this.fill || this.scroll) {
             style(wrapper, {
@@ -106,12 +108,53 @@ export default class WaveWrapper {
         } else {
             progress = ((clientX - bbox.left) + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
         }
-        subjects.waveWrapper_state.next({type:e.type, progress});
+        subjects.waveWrapper_state.next({type: e.type, progress});
         // return progress; //return float point corresponding to the width of mainWave_wrapper
     }
 
     getWidth() {
         return Math.round(this.container.clientWidth * this.pixelRatio);
+    }
+
+    setWidth(width) {
+        if (this.width == width) return false;
+
+        this.width = width;
+
+        if (this.fill || this.scroll) {
+            style(this.mainWave_wrapper, {width: ''});
+        } else {
+            style(this.mainWave_wrapper, {
+                width: ~~(this.width / this.pixelRatio) + 'px'
+            });
+        }
+
+        this.updateSize(); //moved to wavecanvas //done
+        return true;
+    }
+
+    addCanvases(waveCanvas, mainWaveCanvas, progressWaveCanvas) {
+        this.wave_canvas =waveCanvas;
+        this.mainWave_wrapper.appendChild(mainWaveCanvas);
+        this.progressWave_wrapper.appendChild(progressWaveCanvas);
+
+    }
+
+    updateSize() {
+        /* //used to be like this if we want to set overlap.
+          let canvasWidth = this.maxCanvasWidth + this.overlap;
+          canvasWidth = this.wave_wrapper.getWidth() - this.maxCanvasWidth * 0;
+          */
+        const elementWidth = Math.round(this.getWidth() / this.pixelRatio);
+        const totalWidth = Math.round(this.getWidth() / this.pixelRatio);
+        this.wave_canvas.updateDimensions(elementWidth, totalWidth, this.getWidth(), this.height); //TODO solve this
+    }
+
+    addCursor() {
+        style(this.progressWave_wrapper, {
+            borderRightWidth: '1px', //hardcoded
+            borderRightColor: 'red' ////hardcoded
+        });
     }
 
     createProgressWaveWrapper() {

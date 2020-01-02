@@ -93,7 +93,7 @@ class AudioPlayer extends Component {
     }
 
     render() {
-        return <div>
+        return <div style={{padding:'32px'}}>
             <select defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>
@@ -108,7 +108,7 @@ class AudioPlayer extends Component {
                 <p>play time: {this.state.time} s</p>
                 <p>played percentage: {this.state.percent} % </p>
             </div>
-            <div id="waveform-container" style={{width:'600px'}}></div>
+            <div id="waveform-container" style={{border: '1px solid black'}}></div>
         </div>
     }
 }
