@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
-import M3dAudio from './AudioPlayerControllers/M3dAudio';
-import {subjects} from './AudioPlayerControllers/M3dAudio';
+import M3dAudio from './M3dAudio/M3dAudio';
+import {subjects} from './M3dAudio/M3dAudio';
 import PropTypes from 'prop-types';
 
 class AudioPlayer extends Component {
@@ -46,11 +46,10 @@ class AudioPlayer extends Component {
 
          */
         const m3dAudio = new M3dAudio();
-        m3dAudio.create({container: '#waveform-container', filters: this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
+        m3dAudio.create({container_id: '#waveform-container', filters: this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
-        document.querySelector('#waveform-container').appendChild(document.createElement('wave'));
     }
 
     play = () => {
@@ -109,7 +108,7 @@ class AudioPlayer extends Component {
                 <p>play time: {this.state.time} s</p>
                 <p>played percentage: {this.state.percent} % </p>
             </div>
-            <div id="waveform-container"></div>
+            <div id="waveform-container" style={{width:'600px'}}></div>
         </div>
     }
 }

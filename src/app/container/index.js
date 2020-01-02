@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import AudioPlayer from "./AudioPlayer";
-import {listOfFilter} from "./AudioPlayerControllers/constants/filterschema"; //will be moved to parent class of AP
+import {listOfFilter} from "./M3dAudio/constants/filterschema"; //will be moved to parent class of AP
 class Home extends Component {
     constructor(props) {
         super(props);

@@ -1,4 +1,6 @@
 import WebAudio from "./WebAudio";
+import WaveWrapper from './WaveWrapper';
+import WaveCanvas from './WaveCanvas';
 import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
 
@@ -6,12 +8,16 @@ export const subjects = {
     m3dAudio_state: new Subject(),
     webAudio_scriptNode_onaudioprocess: new Subject(),
     webAudio_state: new Subject(),
+    waveWrapper_state: new Subject()
 };
 
 class M3dAudio {
     constructor() {
-        this.web_audio = null;
-        this.drawer = null;
+        //abstraction class aka web api
+        this.wave_wrapper = null; //wave_wrapper class
+        this.web_audio = null; //webaudio class
+
+        //audio
         this.array_buffer = null;
         this.audio_buffer = null;
         this.savedVolume = 1; //default 1
@@ -28,19 +34,23 @@ class M3dAudio {
         this.filters = params.filters;
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
 
-        //audio
+        //instantiations
         this.web_audio = new WebAudio();
+        this.wave_wrapper = new WaveWrapper({container_id:params.container_id, height:200});
+        this.wave_canvas = new WaveCanvas(this.wave_wrapper, {pixelRatio: window.devicePixelRatio, maxCanvasWidth:4000});
 
+        //audio
         this.web_audio.init();
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
             subjects.m3dAudio_state.next(i)
         });
 
-        //drawing
-        this.container = document.querySelector(params.container); //container is strictly valid of string type
-        if(!this.container) throw new Error('container is not found. create one a div with id and pass into param when creating m3daudio object')
+        //wave_wrapper:HTMLElement
+        this.wave_wrapper.init(); //TODO: put this in createWrapper() and listen to interaction via subject by subscribing to it
 
+        //wave_cavnas:Canvas. wave_wrapper has to be initialised before wave_canvas.
+        this.wave_canvas.init(); //TODO: put this in createCanvas() and listen to interaction via subject by subscribing to it
     }
 
     /*
