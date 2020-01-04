@@ -1,5 +1,6 @@
 import style from './util/Style';
 import {subjects} from "./M3dAudio";
+import _ from 'lodash';
 
 export default class WaveWrapper {
 
@@ -26,8 +27,9 @@ export default class WaveWrapper {
         this.wave_canvas = null;
         this.maxCanvasWidth = params.maxCanvasWidth || 4000; //4k
 
-        this.mainWaveColor = params.mainWaveStyle;
-        this.progressWaveColor = params.progressWaveStyle;
+        this.mainWaveStyle = params.mainWaveStyle;
+        this.progressWaveStyle = params.progressWaveStyle;
+        this.cursorStyle = params.cursorStyle
     }
 
     /**
@@ -117,7 +119,6 @@ export default class WaveWrapper {
             progress = ((clientX - bbox.left) + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
         }
         subjects.waveWrapper_state.next({type: e.type, progress});
-        // return progress; //return float point corresponding to the width of mainWave_wrapper
     }
 
     getWidth() {
@@ -129,15 +130,10 @@ export default class WaveWrapper {
 
         this.width = width;
 
-        if (this.fill || this.scroll) {
-            style(this.mainWave_wrapper, {width: ''});
-        } else {
-            style(this.mainWave_wrapper, {
-                width: ~~(this.width / this.pixelRatio) + 'px'
-            });
-        }
+        if (this.fill || this.scroll) style(this.mainWave_wrapper, {width: ''});
+        else style(this.mainWave_wrapper, {width: ~~(this.width / this.pixelRatio) + 'px'});
 
-        this.updateSize(); //moved to wavecanvas //done
+        this.updateSize();
         return true;
     }
 
@@ -162,8 +158,8 @@ export default class WaveWrapper {
             // set
             let absmax = 1 / this.amplitude;
             if (this.normalize) {
-                const max = util.max(peaks);
-                const min = util.min(peaks);
+                const max = _.max(peaks);
+                const min = _.min(peaks);
                 absmax = -min > max ? -min : max;
             }
 
@@ -186,6 +182,7 @@ export default class WaveWrapper {
     }
 
     drawWave(peaks, channelIndex, start, end) {
+        this.wave_canvas.clearWave();
         this.setContextStyles();
         return this.prepareDraw(
             peaks,
@@ -206,16 +203,14 @@ export default class WaveWrapper {
 
                 // if drawWave was called within ws.empty we don't pass a start and
                 // end and simply want a flat line
-                if (start !== undefined) {
-                    this.drawLine(peaks, absmax, halfH, offsetY);
-                }
+                if (start !== undefined) this.drawLine(peaks, absmax, halfH, offsetY);
 
                 this.wave_canvas.mainWave_ctx.fillRect(start, this.height / 2, this.width, 1);
             }
         );
     }
 
-    drawLine(peaks, absmax, halfH, offsetY){
+    drawLine(peaks, absmax, halfH, offsetY) {
         this.wave_canvas.drawLine(peaks, absmax, halfH, offsetY);
     }
 
@@ -265,12 +260,12 @@ export default class WaveWrapper {
 
     setContextStyles() {
         //ctx
-        this.wave_canvas.setCtxWaveFillStyles(this.mainWaveColor, this.progressWaveColor);
+        this.wave_canvas.setCtxWaveFillStyles(this.mainWaveStyle, this.progressWaveStyle);
     }
 
     setCanvasStyles() {
         //canvas
-        this.wave_canvas.setCanvasWaveBgStyles(this.mainWaveColor, this.progressWaveColor);
+        this.wave_canvas.setCanvasWaveBgStyles(this.mainWaveStyle, this.progressWaveStyle);
     }
 
     updateSize() {
@@ -285,8 +280,9 @@ export default class WaveWrapper {
 
     addCursor() {
         style(this.progressWave_wrapper, {
-            borderRightWidth: '1px', //hardcoded
-            borderRightColor: 'red' ////hardcoded
+            zIndex: 1,
+            borderRightWidth: this.cursorStyle.borderRightWidth,
+            borderRightColor: this.cursorStyle.borderRightColor
         });
     }
 

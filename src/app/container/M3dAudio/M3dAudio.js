@@ -48,9 +48,11 @@ class M3dAudio {
             container_id: params.container_id,
             height: params.height,
             pixelRatio: this.pixelRatio,
-            amplitude: 0.5,
+            amplitude:1,
+            normalize:false,
             mainWaveStyle: params.mainWaveStyle,
             progressWaveStyle: params.progressWaveStyle,
+            cursorStyle:params.cursorStyle,
         });
         this.wave_canvas = new WaveCanvas();
 

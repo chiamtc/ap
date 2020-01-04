@@ -1,6 +1,17 @@
 import React, {Component} from 'react';
 import M3dAudio from './M3dAudio/M3dAudio';
 import {subjects} from './M3dAudio/M3dAudio';
+import {
+    PREPARING,
+    UNREADY,
+    READY,
+    PLAY,
+    PAUSE,
+    PLAYING,
+    RESUME,
+    PAUSED,
+    FINISHED
+} from "./M3dAudio/constants";
 import PropTypes from 'prop-types';
 
 class AudioPlayer extends Component {
@@ -12,7 +23,7 @@ class AudioPlayer extends Component {
             m3dAudio: null,
             gain: 1,
             status: 'unready',
-            filterId: 'F7',
+            filterId: 'F1',
         }
     }
 
@@ -51,13 +62,17 @@ class AudioPlayer extends Component {
             filters: this.props.filters,
             filterId: this.props.filterId,
             height: 300,
-            mainWaveStyle:{
-                backgroundColor:'white',
-                lineColor:'rgb(40, 170, 226)'
+            mainWaveStyle: {
+                backgroundColor: 'transparent',
+                lineColor: 'rgb(40, 170, 226)'
             },
-            progressWaveStyle:{
-                backgroundColor:'rgba(40, 170, 226,0.05)',
-                lineColor:'violet'
+            progressWaveStyle: {
+                backgroundColor: 'rgba(40, 170, 226,0.05)',
+                lineColor: 'violet'
+            },
+            cursorStyle: {
+                borderRightWidth: '2px',
+                borderRightColor: 'red'
             }
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
@@ -82,16 +97,16 @@ class AudioPlayer extends Component {
     //TODO: export to ./AudioPlayerControllers/constants/index.js
     renderStatus() {
         switch (this.state.status) {
-            case 'unready':
-                return 'preparing';
-            case 'ready':
-                return 'play';
-            case 'playing':
-                return 'pause';
-            case 'paused':
-                return 'resume';
-            case 'finished':
-                return 'play';
+            case UNREADY:
+                return PREPARING;
+            case READY:
+                return PLAY;
+            case PLAYING:
+                return PAUSE;
+            case PAUSED:
+                return RESUME;
+            case FINISHED:
+                return PLAY;
         }
     }
 
@@ -101,7 +116,9 @@ class AudioPlayer extends Component {
 
     renderOptions() {
         let options = [];
-        this.props.filters.map((f) => options.push(<option key={f.filterID} value={f.filterID}>{f.labelName}</option>));
+        this.props.filters.map((f) => {
+            if (f.displayInPicker) options.push(<option key={f.filterID} value={f.filterID}>{f.labelName}</option>)
+        });
         return options;
     }
 
@@ -121,7 +138,7 @@ class AudioPlayer extends Component {
                 <p>play time: {this.state.time} s</p>
                 <p>played percentage: {this.state.percent} % </p>
             </div>
-            <div id="waveform-container" style={{border: '1px solid black'}}></div>
+            <div id="waveform-container" style={{border: '1px solid black'}}/>
         </div>
     }
 }

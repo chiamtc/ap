@@ -101,7 +101,6 @@ class WebAudio {
         return new (window.AudioContext || window.webkitAudioContext)();
     }
 
-
     getOfflineAudioContext(sampleRate) {
         return new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, sampleRate);
     }
@@ -145,7 +144,6 @@ class WebAudio {
         this.buffer = audioBuffer;
         this.createBufferSource();
         subjects.webAudio_state.next('ready'); //fire webAudio_state(READY:string):Subscription event
-
     }
 
     createBufferSource() {
@@ -169,11 +167,8 @@ class WebAudio {
 
 
     createGainNode() {
-        if (this.audioContext.createGain) {
-            this.gainNode = this.audioContext.createGain();
-        } else {
-            this.gainNode = this.audioContext.createGainNode();
-        }
+        if (this.audioContext.createGain) this.gainNode = this.audioContext.createGain();
+        else this.gainNode = this.audioContext.createGainNode();
         this.gainNode.connect(this.audioContext.destination);
     }
 
@@ -267,7 +262,6 @@ class WebAudio {
         this.lastPlay = this.audioContext.currentTime;
 
         if (this.state === this.states[FINISHED]) this.setState(PAUSED);
-
         return {
             start: start,
             end: end

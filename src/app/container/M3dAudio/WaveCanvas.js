@@ -8,8 +8,7 @@ export default class WaveCanvas {
         this._mainWave_ctx = null;
         this._progressWave_canvas = null;
         this._progressWave_ctx = null;
-
-        this.halfPixel = 0.5 / ( window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI);
+        this.halfPixel = 0.5 / (window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI);
     }
 
     init() {
@@ -99,7 +98,7 @@ export default class WaveCanvas {
         for (j; j >= canvasStart; j--) {
             peak = peaks[2 * j + 1] || 0;
             h = Math.round(peak / absmaxHalf);
-            this._mainWave_ctx.lineTo((j - first) * scale  + this.halfPixel, halfOffset - h);
+            this._mainWave_ctx.lineTo((j - first) * scale + this.halfPixel, halfOffset - h);
         }
 
         this._mainWave_ctx.lineTo(
@@ -119,14 +118,8 @@ export default class WaveCanvas {
 
     setCanvasWaveBgStyles(mainWaveColor, progressWaveColor) {
         //good for dark mode
-        style(this.mainWave_canvas, {
-            backgroundColor: mainWaveColor.backgroundColor
-        });
-        style(this._progressWave_canvas, {
-            backgroundColor: progressWaveColor.backgroundColor
-        });
-
-
+        style(this.mainWave_canvas, {backgroundColor: mainWaveColor.backgroundColor});
+        style(this._progressWave_canvas, {backgroundColor: progressWaveColor.backgroundColor});
     }
 
     clearWave() {
@@ -149,6 +142,7 @@ export default class WaveCanvas {
     set progressWave_ctx(value) {
         this._progressWave_ctx = value;
     }
+
     get mainWave_ctx() {
         return this._mainWave_ctx;
     }
