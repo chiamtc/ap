@@ -48,7 +48,7 @@ class M3dAudio {
             container_id: params.container_id,
             height: params.height,
             pixelRatio: this.pixelRatio,
-            amplitude: 1,
+            amplitude: 0.5,
             mainWaveStyle: params.mainWaveStyle,
             progressWaveStyle: params.progressWaveStyle,
         });

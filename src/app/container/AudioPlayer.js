@@ -53,10 +53,10 @@ class AudioPlayer extends Component {
             height: 300,
             mainWaveStyle:{
                 backgroundColor:'white',
-                lineColor:'blue'
+                lineColor:'rgb(40, 170, 226)'
             },
             progressWaveStyle:{
-                backgroundColor:'rgba(40, 170, 226,0.1)',
+                backgroundColor:'rgba(40, 170, 226,0.05)',
                 lineColor:'violet'
             }
         }); //change this to this.props.filterId
