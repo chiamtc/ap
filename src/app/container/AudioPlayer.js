@@ -46,7 +46,20 @@ class AudioPlayer extends Component {
 
          */
         const m3dAudio = new M3dAudio();
-        m3dAudio.create({container_id: '#waveform-container', filters: this.props.filters, filterId: this.props.filterId}); //change this to this.props.filterId
+        m3dAudio.create({
+            container_id: '#waveform-container',
+            filters: this.props.filters,
+            filterId: this.props.filterId,
+            height: 300,
+            mainWaveStyle:{
+                backgroundColor:'white',
+                lineColor:'blue'
+            },
+            progressWaveStyle:{
+                backgroundColor:'rgba(40, 170, 226,0.1)',
+                lineColor:'violet'
+            }
+        }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
@@ -93,7 +106,7 @@ class AudioPlayer extends Component {
     }
 
     render() {
-        return <div style={{padding:'32px'}}>
+        return <div style={{padding: '32px'}}>
             <select defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>

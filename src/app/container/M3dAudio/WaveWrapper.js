@@ -10,18 +10,24 @@ export default class WaveWrapper {
 
         //wrapper params, the main element to have interaction registered and physical attributes (w,h)
         this.height = params.height;
-        this.width = params.width || 0;
+        this.width = 0;
 
         this._mainWave_wrapper = null;
 
         this._progressWave_wrapper = null;
 
+        this.normalize = params.normalize || false;
         this.lastPos = 0;
         this.fill = params.fill || true; //boolean indication to display whole wave
         this.scroll = params.scroll || false; //boolean indication to allow scrolling horizontally
         this.autoCenter = true; //hardcoded
-        this.pixelRatio = params.pixelRatio;
+        this.pixelRatio = params.pixelRatio || 1;
+        this.amplitude = params.amplitude || 1;
         this.wave_canvas = null;
+        this.maxCanvasWidth = params.maxCanvasWidth || 4000; //4k
+
+        this.mainWaveColor = params.mainWaveStyle;
+        this.progressWaveColor = params.progressWaveStyle;
     }
 
     /**
@@ -145,8 +151,72 @@ export default class WaveWrapper {
                 const newPos = ~~(this.mainWave_wrapper.scrollWidth * progress);
                 this.recenterOnPosition(newPos, true);
             }
-            style(this.progressWave_wrapper, {display:'block',width: `${pos}px`});
+            style(this.progressWave_wrapper, {display: 'block', width: `${pos}px`});
         }
+    }
+
+    prepareDraw(peaks, channelIndex, start, end, fn) {
+        return requestAnimationFrame(() => {
+            // calculate maximum modulation value, either from the barHeight
+            // parameter or if normalize=true from the largest value in the peak
+            // set
+            let absmax = 1 / this.amplitude;
+            if (this.normalize) {
+                const max = util.max(peaks);
+                const min = util.min(peaks);
+                absmax = -min > max ? -min : max;
+            }
+
+            // Bar wave draws the bottom only as a reflection of the top,
+            // so we don't need negative values
+            const hasMinVals = [].some.call(peaks, val => val < 0);
+            const height = this.height * this.pixelRatio;
+            const offsetY = height * channelIndex || 0;
+            const halfH = height / 2;
+
+            return fn({
+                absmax: absmax,
+                hasMinVals: hasMinVals,
+                height: height,
+                offsetY: offsetY,
+                halfH: halfH,
+                peaks: peaks
+            });
+        });
+    }
+
+    drawWave(peaks, channelIndex, start, end) {
+        this.setContextStyles();
+        return this.prepareDraw(
+            peaks,
+            channelIndex,
+            start,
+            end,
+            ({absmax, hasMinVals, height, offsetY, halfH, peaks}) => {
+                if (!hasMinVals) {
+                    const reflectedPeaks = [];
+                    const len = peaks.length;
+                    let i = 0;
+                    for (i; i < len; i++) {
+                        reflectedPeaks[2 * i] = peaks[i];
+                        reflectedPeaks[2 * i + 1] = -peaks[i];
+                    }
+                    peaks = reflectedPeaks;
+                }
+
+                // if drawWave was called within ws.empty we don't pass a start and
+                // end and simply want a flat line
+                if (start !== undefined) {
+                    this.drawLine(peaks, absmax, halfH, offsetY);
+                }
+
+                this.wave_canvas.mainWave_ctx.fillRect(start, this.height / 2, this.width, 1);
+            }
+        );
+    }
+
+    drawLine(peaks, absmax, halfH, offsetY){
+        this.wave_canvas.drawLine(peaks, absmax, halfH, offsetY);
     }
 
     recenterOnPosition(position, immediate) {
@@ -160,7 +230,7 @@ export default class WaveWrapper {
         let target = position - half;
         let offset = target - scrollLeft;
 
-        if (maxScroll == 0) return;
+        if (maxScroll === 0) return;
 
         // if the cursor is currently visible... //not executed if I dont set immediate
         if (!immediate && -half <= offset && offset < half) {
@@ -185,10 +255,22 @@ export default class WaveWrapper {
 
     //this function adds initialised canvases from m3daudio to this class so that it could update dimension of canvases in updateSize()
     //reasons 1. one wrapper can have multiple canvases 2. canvas' job is to clear and draw lines nothing to do with wrapper's updating size. 3. wrapper updates size followed by canvases 4. most properties used to update canvases size is in wrapper class
-    addCanvases(waveCanvas, mainWaveCanvas, progressWaveCanvas) {
+    addCanvases(waveCanvas) {
         this.wave_canvas = waveCanvas;
-        this.mainWave_wrapper.appendChild(mainWaveCanvas);
-        this.progressWave_wrapper.appendChild(progressWaveCanvas);
+        this.mainWave_wrapper.appendChild(waveCanvas.mainWave_canvas);
+        this.progressWave_wrapper.appendChild(waveCanvas.progressWave_canvas);
+        //only allows user to set canvas background
+        this.setCanvasStyles()
+    }
+
+    setContextStyles() {
+        //ctx
+        this.wave_canvas.setCtxWaveFillStyles(this.mainWaveColor, this.progressWaveColor);
+    }
+
+    setCanvasStyles() {
+        //canvas
+        this.wave_canvas.setCanvasWaveBgStyles(this.mainWaveColor, this.progressWaveColor);
     }
 
     updateSize() {
