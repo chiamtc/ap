@@ -24,7 +24,7 @@ class AudioPlayer extends Component {
             gain: 1,
             status: 'unready',
             filterId: 'F1',
-            zoomLevel:20
+            zoomLevel: 20
         }
     }
 
@@ -63,9 +63,9 @@ class AudioPlayer extends Component {
             filters: this.props.filters,
             filterId: this.props.filterId,
             height: 200,
-            amplitude:1,
-            fill:true,
-            scroll:true,
+            amplitude: 1,
+            fill: true,
+            scroll: true,
             mainWaveStyle: {
                 backgroundColor: 'transparent',
                 lineColor: 'rgb(40, 170, 226)'
@@ -82,7 +82,6 @@ class AudioPlayer extends Component {
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
-        await this.state.m3dAudio.zoom(20);
     }
 
     play = () => {
@@ -125,13 +124,13 @@ class AudioPlayer extends Component {
         return options;
     }
 
-    zoom = (e) =>{
+    zoom = (e) => {
         this.state.m3dAudio.zoom(e.target.value);
         this.setState({zoomLevel: e.target.value});
     }
 
     render() {
-        return <div style={{}}>
+        return <div style={{margin: '2em'}}>
             <select defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>
@@ -151,6 +150,7 @@ class AudioPlayer extends Component {
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
             <div id="waveform-container" style={{border: '1px solid black'}}/>
+            <div id="waveform-timeline"/>
         </div>
     }
 }
