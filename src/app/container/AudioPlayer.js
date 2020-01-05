@@ -24,6 +24,7 @@ class AudioPlayer extends Component {
             gain: 1,
             status: 'unready',
             filterId: 'F1',
+            zoomLevel:20
         }
     }
 
@@ -61,7 +62,10 @@ class AudioPlayer extends Component {
             container_id: '#waveform-container',
             filters: this.props.filters,
             filterId: this.props.filterId,
-            height: 300,
+            height: 200,
+            amplitude:1,
+            fill:true,
+            scroll:true,
             mainWaveStyle: {
                 backgroundColor: 'transparent',
                 lineColor: 'rgb(40, 170, 226)'
@@ -78,6 +82,7 @@ class AudioPlayer extends Component {
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
+        await this.state.m3dAudio.zoom(20);
     }
 
     play = () => {
@@ -86,13 +91,13 @@ class AudioPlayer extends Component {
         this.state.m3dAudio.getOnAudioProcessTime((res) => {
             this.setState({time: res.ms, percent: res.percent});
         })
-    }
+    };
 
     changeVolume = (e) => {
         const gain = parseFloat(e.target.value);
         this.state.m3dAudio.setVolume(gain);
         this.setState({gain: this.state.m3dAudio.getVolume()});
-    }
+    };
 
     //TODO: export to ./AudioPlayerControllers/constants/index.js
     renderStatus() {
@@ -110,9 +115,7 @@ class AudioPlayer extends Component {
         }
     }
 
-    changeFilter = (e) => {
-        this.state.m3dAudio.changeFilter(e.target.value);
-    };
+    changeFilter = (e) => this.state.m3dAudio.changeFilter(e.target.value);
 
     renderOptions() {
         let options = [];
@@ -122,8 +125,13 @@ class AudioPlayer extends Component {
         return options;
     }
 
+    zoom = (e) =>{
+        this.state.m3dAudio.zoom(e.target.value);
+        this.setState({zoomLevel: e.target.value});
+    }
+
     render() {
-        return <div style={{padding: '32px'}}>
+        return <div style={{}}>
             <select defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>
@@ -137,6 +145,10 @@ class AudioPlayer extends Component {
             <div>
                 <p>play time: {this.state.time} s</p>
                 <p>played percentage: {this.state.percent} % </p>
+            </div>
+            <div>
+                Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
+                <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
             <div id="waveform-container" style={{border: '1px solid black'}}/>
         </div>

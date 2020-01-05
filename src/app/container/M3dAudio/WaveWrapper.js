@@ -7,15 +7,15 @@ export default class WaveWrapper {
     constructor(params) {
         //container which is to hold wrapper and wrapper's subsequent elements
         this.container_id = params.container_id;
-        this._container = null;
+        this.container = null;
 
         //wrapper params, the main element to have interaction registered and physical attributes (w,h)
         this.height = params.height;
         this.width = 0;
 
-        this._mainWave_wrapper = null;
+        this.mainWave_wrapper = null;
 
-        this._progressWave_wrapper = null;
+        this.progressWave_wrapper = null;
 
         this.normalize = params.normalize || false;
         this.lastPos = 0;
@@ -55,7 +55,7 @@ export default class WaveWrapper {
 
         if (!container) {
             throw new Error("No container element id found. Pass container id as a string.")
-        } else this._container = container;
+        } else this.container = container;
     }
 
     createMainWaveWrapper() {
@@ -72,17 +72,17 @@ export default class WaveWrapper {
                 overflowY: 'hidden'
             });
         }
-        this._mainWave_wrapper = this._container.appendChild(wrapper);
+        this.mainWave_wrapper = this.container.appendChild(wrapper);
         this.register_mainWrapper_events();
     }
 
     register_mainWrapper_events() {
-        this._mainWave_wrapper.addEventListener('click', (e) => {
+        this.mainWave_wrapper.addEventListener('click', (e) => {
             const scrollbarHeight =
-                this._mainWave_wrapper.offsetHeight - this._mainWave_wrapper.clientHeight;
+                this.mainWave_wrapper.offsetHeight - this.mainWave_wrapper.clientHeight;
             if (scrollbarHeight !== 0) {
                 // scrollbar is visible.  Check if click was on it
-                const bbox = this._mainWave_wrapper.getBoundingClientRect();
+                const bbox = this.mainWave_wrapper.getBoundingClientRect();
                 if (e.clientY >= bbox.bottom - scrollbarHeight) {
                     // ignore mousedown as it was on the scrollbar
                     return;
@@ -92,11 +92,11 @@ export default class WaveWrapper {
             this.handleEvent_mainWave(e);
         });
 
-        this._mainWave_wrapper.addEventListener('dblclick', e => {
+        this.mainWave_wrapper.addEventListener('dblclick', e => {
             // this.fireEvent('dblclick', e, this.handleEvent(e));  //TODO: create a new global canvas subject and fire here
         });
 
-        /*   this._mainWave_wrapper.addEventListener('scroll', e => {
+        /*   this.mainWave_wrapper.addEventListener('scroll', e => {
                // this.handleEvent_mainWave(e);
                // this.fireEvent('scroll', e) //TODO: create a new global canvas subject and fire here
            });*/
@@ -107,16 +107,15 @@ export default class WaveWrapper {
         const clientX = e.targetTouches
             ? e.targetTouches[0].clientX
             : e.clientX;
-        const bbox = this._mainWave_wrapper.getBoundingClientRect();
+        const bbox = this.mainWave_wrapper.getBoundingClientRect();
         const nominalWidth = this.width;
         const parentWidth = this.getWidth();
-
         let progress;
         if (!this.fill && nominalWidth < parentWidth) {
             progress = (clientX - bbox.left) * (this.pixelRatio / nominalWidth) || 0;
             if (progress > 1) progress = 1;
         } else {
-            progress = ((clientX - bbox.left) + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
+            progress = (clientX - bbox.left + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
         }
         subjects.waveWrapper_state.next({type: e.type, progress});
     }
@@ -126,21 +125,22 @@ export default class WaveWrapper {
     }
 
     setWidth(width) {
-        if (this.width === width) return false;
+        if (this.width == width) return false;
 
         this.width = width;
 
-        if (this.fill || this.scroll) style(this.mainWave_wrapper, {width: ''});
-        else style(this.mainWave_wrapper, {width: ~~(this.width / this.pixelRatio) + 'px'});
-
+        if (this.fill || this.scroll) {
+            style(this.mainWave_wrapper, {width: ''});
+        } else {
+            style(this.mainWave_wrapper, {width: ~~(this.width / this.pixelRatio) + 'px'});
+        }
         this.updateSize();
         return true;
     }
 
     renderProgressWave(progress) {
         const minPxDelta = 1 / this.pixelRatio;
-        const pos = Math.round(progress * this.width);
-
+        const pos = Math.round(progress * this.width) * minPxDelta;
         if (pos < this.lastPos || pos - this.lastPos >= minPxDelta) {
             this.lastPos = pos;
             if (this.scroll && this.autoCenter) {
@@ -225,7 +225,7 @@ export default class WaveWrapper {
         let target = position - half;
         let offset = target - scrollLeft;
 
-        if (maxScroll === 0) return;
+        if (maxScroll == 0) return;
 
         // if the cursor is currently visible... //not executed if I dont set immediate
         if (!immediate && -half <= offset && offset < half) {
@@ -269,18 +269,16 @@ export default class WaveWrapper {
     }
 
     updateSize() {
-        /* //used to be like this if we want to set overlap.
-          let canvasWidth = this.maxCanvasWidth + this.overlap;
-          canvasWidth = this.wave_wrapper.getWidth() - this.maxCanvasWidth * 0;
-          */
-        const elementWidth = Math.round(this.getWidth() / this.pixelRatio);
-        const totalWidth = Math.round(this.getWidth() / this.pixelRatio);
-        this.wave_canvas.updateDimensions(elementWidth, totalWidth, this.getWidth(), this.height);
+        //used to be like this if we want to set overlap.
+        let canvasWidth = this.width - this.maxCanvasWidth * 0;
+        const elementWidth = Math.round(canvasWidth / this.pixelRatio);
+        const totalWidth = Math.round(this.width / this.pixelRatio);
+        this.wave_canvas.updateDimensions(elementWidth, totalWidth, canvasWidth, this.height);
     }
 
     addCursor() {
         style(this.progressWave_wrapper, {
-            zIndex: 1,
+            zIndex: 4,
             borderRightWidth: this.cursorStyle.borderRightWidth,
             borderRightColor: this.cursorStyle.borderRightColor
         });
@@ -317,31 +315,6 @@ export default class WaveWrapper {
          *   l      |     l
          *   l______|_____l
          */
-        this._progressWave_wrapper = this.mainWave_wrapper.appendChild(wrapper);
+        this.progressWave_wrapper = this.mainWave_wrapper.appendChild(wrapper);
     }
-
-    get container() {
-        return this._container;
-    }
-
-    set container(value) {
-        this._container = value;
-    }
-
-    get mainWave_wrapper() {
-        return this._mainWave_wrapper;
-    }
-
-    set mainWave_wrapper(value) {
-        this._mainWave_wrapper = value;
-    }
-
-    get progressWave_wrapper() {
-        return this._progressWave_wrapper;
-    }
-
-    set progressWave_wrapper(value) {
-        this._progressWave_wrapper = value;
-    }
-
 }

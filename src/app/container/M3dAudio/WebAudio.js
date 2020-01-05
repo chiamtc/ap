@@ -320,7 +320,7 @@ class WebAudio {
         this.mergedPeaks = [];
         // Set the last element of the sparse array so the peak arrays are
         // appropriately sized for other calculations.
-        const channels = this.filteredBuffer ? this.filteredBuffer.numberOfChannels : 1;
+        const channels = this.buffer ? this.buffer.numberOfChannels : 1;
         let c;
         for (c = 0; c < channels; c++) {
             this.splitPeaks[c] = [];

@@ -30,7 +30,8 @@ class M3dAudio {
         this.filterId = null;
         this.selectedFilter = null; //new filter selected by user
         this.web_audio_state = 'unready'; //default
-
+        this.fill = true;
+        this.scroll = false;
         this.minPxPerSec = 20; //for zoom
         this.pixelRatio = window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI;
 
@@ -40,7 +41,7 @@ class M3dAudio {
         //set m3daudio properties
         this.filters = params.filters;
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
-        this.minPxPerSec = params.minPxPerSec;
+        // this.minPxPerSec = params.minPxPerSec;
 
         //instantiations
         this.web_audio = new WebAudio();
@@ -48,11 +49,13 @@ class M3dAudio {
             container_id: params.container_id,
             height: params.height,
             pixelRatio: this.pixelRatio,
-            amplitude:1,
-            normalize:false,
+            amplitude: params.amplitude,
+            fill: this.fill,
+            scroll: this.scroll,
+            normalize: false,
             mainWaveStyle: params.mainWaveStyle,
             progressWaveStyle: params.progressWaveStyle,
-            cursorStyle:params.cursorStyle,
+            cursorStyle: params.cursorStyle,
         });
         this.wave_canvas = new WaveCanvas();
 
@@ -131,7 +134,7 @@ class M3dAudio {
         let start = 0;
         let end = Math.max(start + parentWidth, width); //600 = Math.max between 600 and 400
         // Fill container
-        if (this.wave_wrapper.fill && (!this.wave_wrapper.scroll || nominalWidth < parentWidth)) {
+        if (this.fill && (!this.scroll || nominalWidth < parentWidth)) {
             width = parentWidth;
             start = 0;
             end = width;
@@ -196,16 +199,31 @@ class M3dAudio {
         return this.web_audio.getCurrentTime();
     }
 
+    zoom(level) {
+        if (!level) {
+            // this.minPxPerSec = this.minPxPerSec;
+            this.scroll = false;
+            this.wave_wrapper.scroll =false;
+        } else {
+            //executed here
+            this.minPxPerSec = level;
+            this.scroll = true;
+            this.wave_wrapper.scroll =true;
+        }
+        this.drawBuffer();
+        this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
+
+    }
+
     seekTo(seekToTime) {
-        //TODO: commented block from ws, check them
         const paused = this.web_audio.isPaused();
         if (!paused) this.web_audio.pause(); //pause and render, it's paused in webaudio.addOnAudioProcess() 2nd if else clause
-        /* const oldScrollParent = this.params.scrollParent;
-         this.params.scrollParent = false;*/
+        const oldScrollParent = this.scroll;
+        this.scroll = false;
         this.web_audio.seekTo(seekToTime * this.getDuration());
         this.wave_wrapper.renderProgressWave(seekToTime); //TODO: setTimeout ?
         if (!paused) this.web_audio.play();
-        // this.params.scrollParent = oldScrollParent;
+        this.scroll = oldScrollParent;
     }
 
     getOnAudioProcessTime(cb) {
