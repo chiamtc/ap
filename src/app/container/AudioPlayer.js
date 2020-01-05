@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import M3dAudio from './M3dAudio/M3dAudio';
 import {subjects} from './M3dAudio/M3dAudio';
+import style from "./M3dAudio/util/Style";
 import {
     PREPARING,
     UNREADY,
@@ -81,7 +82,16 @@ class AudioPlayer extends Component {
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
-        subjects.m3dAudio_state.subscribe((res) => this.setState({status: res}));
+        subjects.m3dAudio_state.subscribe((res) => {
+            this.setState({status: res});
+            const timeline = document.querySelector('#waveform-timeline');
+            const canvas = document.createElement('canvas');
+
+            const ctx = canvas.getContext('2d', {desynchronized: true});
+            ctx.fillStyle='red';
+            ctx.fillRect(0,0, 640,480)
+            timeline.appendChild(canvas);
+        });
     }
 
     play = () => {
