@@ -38,12 +38,7 @@ class WaveTimeline {
         5. create ctx on canvas for actual rendering/ drawing
         6. append canvas to wrapper
      */
-    //receives scroll event from mainwave_wrapper and update the scroll left
-    _onScroll = () => {
-        if (this.wrapper && this.drawer.mainWave_wrapper) {
-            this.wrapper.scrollLeft = this.drawer.mainWave_wrapper.scrollLeft;
-        }
-    };
+
     init() {
         this.setM3dAudioState();
         this.createContainer();
@@ -61,8 +56,12 @@ class WaveTimeline {
             }
         });
 
-        this.m3dAudio.wave_wrapper.mainWave_wrapper.addEventListener('scroll', this._onScroll);
+        this.m3dAudio.wave_wrapper.mainWave_wrapper.addEventListener('scroll', this.onScroll);
     }
+
+    //receives scroll event from mainwave_wrapper and update the scroll left
+    onScroll = () => this.wrapper.scrollLeft = this.drawer.mainWave_wrapper.scrollLeft;
+
 
     clearTimeline() {
         this.wrapper.removeChild(this.timelineCanvas);//not sure if it's efficient?
