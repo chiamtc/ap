@@ -61,6 +61,7 @@ class WaveTimeline {
 
     clearTimeline() {
         this.wrapper.removeChild(this.timelineCanvas);//not sure if it's efficient?
+        // this.timelineCanvas.getContext('2d').clearRect(0,0,this.width, this.height);
     }
 
     setM3dAudioState() {
@@ -111,7 +112,8 @@ class WaveTimeline {
         this.timelineCanvas = this.wrapper.appendChild(canvasEle);
         this.timelineCtx = this.timelineCanvas.getContext('2d', {desynchronized: true})
         this.setCanvasStyle();
-        const canvasWidth = this.wrapper.scrollWidth //- this.maxCanvasElementWidth * 0;
+
+        const canvasWidth = this.m3dAudio.wave_wrapper.mainWave_wrapper.scrollWidth - this.maxCanvasElementWidth * 0;
         canvasEle.width = canvasWidth * this.pixelRatio;
         canvasEle.height = (this.height + 1) * this.pixelRatio;
         style(this.timelineCanvas, {

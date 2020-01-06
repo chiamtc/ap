@@ -92,7 +92,9 @@ class M3dAudio {
     initListeners(){
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
-            this.createPlugins(); //create plugin when webaudiostate is ready;
+            if(i === 'ready'){ //make it to switch statement if there's other mechanism other than 'ready'
+                this.createPlugins(); //create plugin when webaudiostate is ready;
+            }
             subjects.m3dAudio_state.next(i);
         });
 
@@ -180,7 +182,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         this.wave_canvas.clearWave();
-        // this.wave_wrapper.drawWave(peaks, 0, start, end);
+        this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {
@@ -224,11 +226,13 @@ class M3dAudio {
             // this.minPxPerSec = this.minPxPerSec;
             this.scroll = false;
             this.wave_wrapper.scroll = false;
+            this.wave_wrapper.autoCenter = false;
         } else {
             //executed here
             this.minPxPerSec = level;
             this.scroll = true;
             this.wave_wrapper.scroll = true;
+            this.wave_wrapper.autoCenter = true;
         }
         this.drawBuffer();
         this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());

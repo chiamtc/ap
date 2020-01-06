@@ -63,7 +63,7 @@ class AudioPlayer extends Component {
             container_id: '#waveform-container',
             filters: this.props.filters,
             filterId: this.props.filterId,
-            height: 200,
+            height: 250,
             amplitude: 1,
             fill: true,
             scroll: true,
