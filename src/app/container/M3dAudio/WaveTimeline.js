@@ -38,11 +38,12 @@ class WaveTimeline {
         5. create ctx on canvas for actual rendering/ drawing
         6. append canvas to wrapper
      */
-
-    static getInstance() {
-        return WaveTimeline;
-    }
-
+    //receives scroll event from mainwave_wrapper and update the scroll left
+    _onScroll = () => {
+        if (this.wrapper && this.drawer.mainWave_wrapper) {
+            this.wrapper.scrollLeft = this.drawer.mainWave_wrapper.scrollLeft;
+        }
+    };
     init() {
         this.setM3dAudioState();
         this.createContainer();
@@ -53,10 +54,14 @@ class WaveTimeline {
             if (event.type === 'zoom') {
                 this.scroll = event.value.scroll;
                 this.clearTimeline();
+                this.createContainer();
+                this.createWrapper();
                 this.createCanvas();
                 this.renderTimeline();
             }
-        })
+        });
+
+        this.m3dAudio.wave_wrapper.mainWave_wrapper.addEventListener('scroll', this._onScroll);
     }
 
     clearTimeline() {

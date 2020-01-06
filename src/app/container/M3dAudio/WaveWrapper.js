@@ -218,6 +218,11 @@ export default class WaveWrapper {
         this.wave_canvas.drawLine(peaks, absmax, halfH, offsetY);
     }
 
+    recenter(percent) {
+        const position = this.mainWave_wrapper.scrollWidth * percent;
+        this.recenterOnPosition(position, true);
+    }
+
     recenterOnPosition(position, immediate) {
         const scrollLeft = this.mainWave_wrapper.scrollLeft;
         //if canvas is zoomed to certain px.

@@ -85,7 +85,7 @@ class AudioPlayer extends Component {
                     params: {
                         container_id: '#waveform-timeline-top',
                         interval: 5,
-                        direction:'top',
+                        direction: 'top',
                         displayInterval: false
                     }
                 },
@@ -94,7 +94,7 @@ class AudioPlayer extends Component {
                     params: {
                         container_id: '#waveform-timeline-bottom',
                         interval: 5,
-                        direction:'bottom',
+                        direction: 'bottom',
                         displayInterval: true
                     }
                 }]
@@ -171,11 +171,11 @@ class AudioPlayer extends Component {
                 Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
-            <div style={{border: '1px solid black'}}>
-                <div id="waveform-timeline-top"/>
-                <div id="waveform-container"/>
-                <div id="waveform-timeline-bottom"/>
-            </div>
+
+            <div id="waveform-timeline-top"/>
+            <div id="waveform-container"/>
+            <div id="waveform-timeline-bottom"/>
+
         </div>
     }
 }

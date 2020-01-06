@@ -4,6 +4,7 @@ import WaveCanvas from './WaveCanvas';
 import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
 import WaveTimeline from "./WaveTimeline";
+
 export const subjects = {
     m3dAudio_state: new Subject(),
     m3dAudio_control: new Subject(), //external control, not the wrapper
@@ -44,9 +45,9 @@ class M3dAudio {
 
     }
 
-    createPlugins(){
-        this.plugins.map((plugin)=>{
-            switch(plugin.type){
+    createPlugins() {
+        this.plugins.map((plugin) => {
+            switch (plugin.type) {
                 case 'timeline':
                     const t = new WaveTimeline(plugin.params, this);
                     t.init();
@@ -81,7 +82,7 @@ class M3dAudio {
         this.wave_canvas.init();//wave_canvas:Canvas
     }
 
-    setRequiredParams(params){
+    setRequiredParams(params) {
         //set m3daudio properties. url param is passed via a function call, im not setting it unless we want to cache eagerly and store it in indexedDB on client's pc
         this.filters = params.filters;
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
@@ -89,10 +90,10 @@ class M3dAudio {
     }
 
     //listeners
-    initListeners(){
+    initListeners() {
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
-            if(i === 'ready'){ //make it to switch statement if there's other mechanism other than 'ready'
+            if (i === 'ready') { //make it to switch statement if there's other mechanism other than 'ready'
                 this.createPlugins(); //create plugin when webaudiostate is ready;
             }
             subjects.m3dAudio_state.next(i);
@@ -236,7 +237,8 @@ class M3dAudio {
         }
         this.drawBuffer();
         this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
-        subjects.m3dAudio_control.next({type:'zoom', value:{scroll:true}})
+        this.wave_wrapper.recenter(this.getCurrentTime() / this.getDuration());
+        subjects.m3dAudio_control.next({type: 'zoom', value: {scroll: true}})
     }
 
     seekTo(seekToTime) {
