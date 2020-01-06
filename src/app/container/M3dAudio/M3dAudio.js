@@ -3,12 +3,10 @@ import WaveWrapper from './WaveWrapper';
 import WaveCanvas from './WaveCanvas';
 import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
-
-//tobe removed :experimental only
-import style from './util/Style';
-
+import WaveTimeline from "./WaveTimeline";
 export const subjects = {
     m3dAudio_state: new Subject(),
+    m3dAudio_control: new Subject(), //external control, not the wrapper
     webAudio_scriptNode_onaudioprocess: new Subject(),
     webAudio_state: new Subject(),
     waveWrapper_state: new Subject()
@@ -34,15 +32,31 @@ class M3dAudio {
         this.scroll = false;
         this.minPxPerSec = 20; //for zoom
         this.pixelRatio = window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI;
-
+        this.plugins = [];
     }
 
     create(params) {
-        //set m3daudio properties
-        this.filters = params.filters;
-        this.defaultFilter = params.filterId; //filterId recorded from mobile app
-        // this.minPxPerSec = params.minPxPerSec;
+        this.setRequiredParams(params);
+        this.instantiate(params);
+        this.init();
+        this.initListeners(params);
+        this.wave_wrapper.addCanvases(this.wave_canvas);
 
+    }
+
+    createPlugins(){
+        this.plugins.map((plugin)=>{
+            switch(plugin.type){
+                case 'timeline':
+                    const t = new WaveTimeline(plugin, this);
+                    t.init();
+                    break;
+            }
+        })
+
+    }
+
+    instantiate(params) {
         //instantiations
         this.web_audio = new WebAudio();
         this.wave_wrapper = new WaveWrapper({
@@ -58,22 +72,28 @@ class M3dAudio {
             cursorStyle: params.cursorStyle,
         });
         this.wave_canvas = new WaveCanvas();
+    }
 
-        //audio
-        this.web_audio.init();
+    //call init() for fundamental building block for the entire m3daudio
+    init() {
+        this.web_audio.init();//web_audio:WebAudio
+        this.wave_wrapper.init();//wave_wrapper:HTMLElement
+        this.wave_canvas.init();//wave_canvas:Canvas
+    }
 
-        //wave_wrapper:HTMLElement
-        this.wave_wrapper.init(); //TODO: put this in createWrapper() and listen to interaction via subject by subscribing to it
+    setRequiredParams(params){
+        //set m3daudio properties. url param is passed via a function call, im not setting it unless we want to cache eagerly and store it in indexedDB on client's pc
+        this.filters = params.filters;
+        this.defaultFilter = params.filterId; //filterId recorded from mobile app
+        this.plugins = params.plugins;
+    }
 
-        //wave_cavnas:Canvas. wave_wrapper has to be initialised before wave_canvas.
-        this.wave_canvas.init(); //TODO: put this in createCanvas() and listen to interaction via subject by subscribing to it
-
-        this.wave_wrapper.addCanvases(this.wave_canvas);
-
-        //listeners
+    //listeners
+    initListeners(){
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
-            subjects.m3dAudio_state.next(i)
+            this.createPlugins(); //create plugin when webaudiostate is ready;
+            subjects.m3dAudio_state.next(i);
         });
 
         subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => {
@@ -160,7 +180,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         this.wave_canvas.clearWave();
-        this.wave_wrapper.drawWave(peaks, 0, start, end); //TODO << draw
+        // this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {
@@ -203,16 +223,18 @@ class M3dAudio {
         if (!level) {
             // this.minPxPerSec = this.minPxPerSec;
             this.scroll = false;
-            this.wave_wrapper.scroll =false;
+            this.wave_wrapper.scroll = false;
+            subjects.m3dAudio_control.next({type:'zoom', value:level, scroll:false})
         } else {
             //executed here
             this.minPxPerSec = level;
             this.scroll = true;
-            this.wave_wrapper.scroll =true;
+            this.wave_wrapper.scroll = true;
+            subjects.m3dAudio_control.next({type:'zoom', value:level, scroll:true})
         }
         this.drawBuffer();
         this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
-
+        //TODO: fire zoom event
     }
 
     seekTo(seekToTime) {

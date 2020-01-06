@@ -78,19 +78,16 @@ class AudioPlayer extends Component {
             cursorStyle: {
                 borderRightWidth: '2px',
                 borderRightColor: 'red'
-            }
+            },
+            plugins:[{
+                type:'timeline',
+                container_id:'#waveform-timeline'
+            }]
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => {
             this.setState({status: res});
-            const timeline = document.querySelector('#waveform-timeline');
-            const canvas = document.createElement('canvas');
-
-            const ctx = canvas.getContext('2d', {desynchronized: true});
-            ctx.fillStyle='red';
-            ctx.fillRect(0,0, 640,480)
-            timeline.appendChild(canvas);
         });
     }
 
@@ -160,6 +157,7 @@ class AudioPlayer extends Component {
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
             <div id="waveform-container" style={{border: '1px solid black'}}/>
+            {/*<div id="waveform-container"/>*/}
             <div id="waveform-timeline"/>
         </div>
     }
