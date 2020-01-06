@@ -46,8 +46,8 @@ class WaveTimeline {
         this.renderTimeline();
         subjects.m3dAudio_control.subscribe((event)=>{
             if(event.type === 'zoom'){
-                // this.scroll = event.scroll;
-                this.clearTimeline()
+                this.scroll = event.value.scroll;
+                this.clearTimeline();
                 this.createCanvas();
                 this.renderTimeline();
             }
@@ -113,8 +113,7 @@ class WaveTimeline {
 
     renderTimeline() {
         const duration = this.m3dAudio.web_audio.getDuration(); //total duration of the audio
-        console.log(this.fill , this.scroll);
-        const width = this.fill && !this.scroll ? this.drawer.width : this.drawer.scrollWidth * this.pixelRatio;
+        const width = this.fill && !this.scroll ? this.drawer.getContainerWidth() :this.drawer.getWidth();// : this.drawer.scrollWidth * this.pixelRatio;
         const primaryInterval = 5; //dynamic
         const secondaryInterval = primaryInterval - 1;
         const primaryPxPerSec = width / duration;

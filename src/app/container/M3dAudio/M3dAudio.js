@@ -148,7 +148,7 @@ class M3dAudio {
 
     drawBuffer() {
         const nominalWidth = Math.round(this.getDuration() * this.minPxPerSec * this.pixelRatio);
-        const parentWidth = this.wave_wrapper.getWidth();
+        const parentWidth = this.wave_wrapper.getContainerWidth();
         let width = nominalWidth;
         // always start at 0 after zooming for scrolling : issue redraw left part
         let start = 0;
@@ -180,7 +180,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         this.wave_canvas.clearWave();
-        // this.wave_wrapper.drawWave(peaks, 0, start, end);
+        this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {
@@ -224,17 +224,15 @@ class M3dAudio {
             // this.minPxPerSec = this.minPxPerSec;
             this.scroll = false;
             this.wave_wrapper.scroll = false;
-            subjects.m3dAudio_control.next({type:'zoom', value:level, scroll:false})
         } else {
             //executed here
             this.minPxPerSec = level;
             this.scroll = true;
             this.wave_wrapper.scroll = true;
-            subjects.m3dAudio_control.next({type:'zoom', value:level, scroll:true})
         }
         this.drawBuffer();
         this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
-        //TODO: fire zoom event
+        subjects.m3dAudio_control.next({type:'zoom', value:{scroll:true}})
     }
 
     seekTo(seekToTime) {

@@ -109,7 +109,7 @@ export default class WaveWrapper {
             : e.clientX;
         const bbox = this.mainWave_wrapper.getBoundingClientRect();
         const nominalWidth = this.width;
-        const parentWidth = this.getWidth();
+        const parentWidth = this.getContainerWidth();
         let progress;
         if (!this.fill && nominalWidth < parentWidth) {
             progress = (clientX - bbox.left) * (this.pixelRatio / nominalWidth) || 0;
@@ -120,8 +120,12 @@ export default class WaveWrapper {
         subjects.waveWrapper_state.next({type: e.type, progress});
     }
 
-    getWidth() {
+    getContainerWidth() {
         return Math.round(this.container.clientWidth * this.pixelRatio);
+    }
+
+    getWidth(){
+        return this.width;
     }
 
     setWidth(width) {
@@ -272,7 +276,7 @@ export default class WaveWrapper {
         //used to be like this if we want to set overlap.
         let canvasWidth = this.width - this.maxCanvasWidth * 0;
         const elementWidth = Math.round(canvasWidth / this.pixelRatio);
-        const totalWidth = Math.round(this.width / this.pixelRatio);
+        const totalWidth = Math.round(this.width / this.pixelRatio); //TODO: this.width not this.getWidth()
         this.wave_canvas.updateDimensions(elementWidth, totalWidth, canvasWidth, this.height);
     }
 
