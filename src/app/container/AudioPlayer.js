@@ -79,10 +79,25 @@ class AudioPlayer extends Component {
                 borderRightWidth: '2px',
                 borderRightColor: 'red'
             },
-            plugins:[{
-                type:'timeline',
-                container_id:'#waveform-timeline'
-            }]
+            plugins: [
+                {
+                    type: 'timeline',
+                    params: {
+                        container_id: '#waveform-timeline-top',
+                        interval: 5,
+                        direction:'top',
+                        displayInterval: false
+                    }
+                },
+                {
+                    type: 'timeline',
+                    params: {
+                        container_id: '#waveform-timeline-bottom',
+                        interval: 5,
+                        direction:'bottom',
+                        displayInterval: true
+                    }
+                }]
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
@@ -156,9 +171,11 @@ class AudioPlayer extends Component {
                 Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
-            <div id="waveform-container" style={{border: '1px solid black'}}/>
-            {/*<div id="waveform-container"/>*/}
-            <div id="waveform-timeline"/>
+            <div style={{border: '1px solid black'}}>
+                <div id="waveform-timeline-top"/>
+                <div id="waveform-container"/>
+                <div id="waveform-timeline-bottom"/>
+            </div>
         </div>
     }
 }

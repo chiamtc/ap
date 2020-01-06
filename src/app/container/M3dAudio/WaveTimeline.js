@@ -11,18 +11,23 @@ class WaveTimeline {
         this.wrapper = null;
 
         this.timelineCanvas = null;
-
+        this.timelineCtx = null;
         //wrapper params, the main element to have interaction registered and physical attributes (w,h)
-        this.height = 20; //height of the timeline default
+        this.height = params.height || 20; //height of the timeline default
         this.width = 0;
-        this.fontFamily = 'Arial';
-        this.fontSize = 10;
+        this.fontFamily = params.fontFamily || 'Arial';
+        this.fontSize = params.fontSize || 10;
         this.duration = null; //audio duration
         this.maxCanvasWidth = m3dAudio.wave_wrapper.maxCanvasWidth || 4000; //using parent's maxcanvaswidth or 4k as default
         this.maxCanvasElementWidth = 0; //using parent's maxcanvaswidth or 4k as default
         this.fill = true;
         this.scroll = true;
         this.drawer = null; //aka wrapper;
+        this.direction = params.direction || 'bottom';
+        this.primaryInterval = params.interval || 5;
+
+        this.displayInterval = params.displayInterval;
+        this.strideWidth = params.strideWidth || 1;
     }
 
     /*
@@ -44,8 +49,8 @@ class WaveTimeline {
         this.createWrapper();
         this.createCanvas();
         this.renderTimeline();
-        subjects.m3dAudio_control.subscribe((event)=>{
-            if(event.type === 'zoom'){
+        subjects.m3dAudio_control.subscribe((event) => {
+            if (event.type === 'zoom') {
                 this.scroll = event.value.scroll;
                 this.clearTimeline();
                 this.createCanvas();
@@ -96,9 +101,16 @@ class WaveTimeline {
         }
     }
 
+    setCanvasStyle() {
+        this.setFonts(this.fontSize, this.fontFamily);
+    }
+
+
     createCanvas() {
         const canvasEle = document.createElement('canvas');
         this.timelineCanvas = this.wrapper.appendChild(canvasEle);
+        this.timelineCtx = this.timelineCanvas.getContext('2d', {desynchronized: true})
+        this.setCanvasStyle();
         const canvasWidth = this.wrapper.scrollWidth //- this.maxCanvasElementWidth * 0;
         canvasEle.width = canvasWidth * this.pixelRatio;
         canvasEle.height = (this.height + 1) * this.pixelRatio;
@@ -113,25 +125,23 @@ class WaveTimeline {
 
     renderTimeline() {
         const duration = this.m3dAudio.web_audio.getDuration(); //total duration of the audio
-        const width = this.fill && !this.scroll ? this.drawer.getContainerWidth() :this.drawer.getWidth();// : this.drawer.scrollWidth * this.pixelRatio;
-        const primaryInterval = 5; //dynamic
-        const secondaryInterval = primaryInterval - 1;
+        const width = this.fill && !this.scroll ? this.drawer.getContainerWidth() : this.drawer.getWidth();// : this.drawer.scrollWidth * this.pixelRatio;
+        const primaryInterval = this.primaryInterval; //dynamic
         const primaryPxPerSec = width / duration;
         let primaryCurrentPixel = 0;
         let primaryCurrentSec = 0;
         let primaryPixels = [];
-        const ctx = this.timelineCanvas.getContext('2d', {desynchronized: true})
         for (let i = 0; i < duration / primaryInterval; i++) {
             primaryCurrentPixel += primaryPxPerSec * primaryInterval;
             primaryCurrentSec += primaryInterval;
 
             const labelPadding = primaryCurrentSec < 10 ? primaryCurrentPixel - 2 : primaryCurrentPixel - 5;
             if (i === (duration / primaryInterval) - 1) { //last
-                ctx.fillRect(primaryCurrentPixel - 1, 12, 1, this.height);
-                ctx.fillText(primaryCurrentSec.toString(), (labelPadding - 4) * this.pixelRatio, 8);
+                this.renderPrimaryStride(primaryCurrentPixel);
+                this.renderPrimaryLabel(primaryCurrentSec, labelPadding - 10);
             } else {
-                ctx.fillRect(primaryCurrentPixel, 12, 1, this.height);
-                ctx.fillText(primaryCurrentSec.toString(), labelPadding * this.pixelRatio, 8);
+                this.renderPrimaryStride(primaryCurrentPixel);
+                this.renderPrimaryLabel(primaryCurrentSec, labelPadding)
             }
             primaryPixels.push(primaryCurrentPixel);
         }
@@ -139,17 +149,33 @@ class WaveTimeline {
         let secondaryPxPerSec = primaryPixels[0] / primaryInterval; //get the secondary pxPerSec
         let secondaryCurrentPixel = 0;
         primaryPixels.map((p) => {
-            for (let j = 0; j < duration / secondaryInterval; j++) {
+            for (let j = 0; j < duration / primaryPixels.length; j++) {
                 if (j === 0) {
-                    ctx.fillRect(0, 12, 1, this.height); //plot 0
-                    ctx.fillText('0', 0, 8);
+                    this.timelineCtx.fillRect(0, 0, this.strideWidth, this.height); //plot 0
+                    this.displayInterval ? this.timelineCtx.fillText('0', 0, 8) : null;
                 } else {
                     secondaryCurrentPixel += secondaryPxPerSec;
-                    ctx.fillRect(secondaryCurrentPixel, 12, 1, this.height);
+                    this.direction === 'top' ?
+                        this.timelineCtx.fillRect(secondaryCurrentPixel, 0, this.strideWidth, this.height - 12) :
+                        this.timelineCtx.fillRect(secondaryCurrentPixel, this.height - 3, this.strideWidth, this.height)
                 }
             }
             secondaryCurrentPixel = p; //reset to the next primary Label
         })
+    }
+
+    renderPrimaryLabel(primaryCurrentSec, labelPadding) {
+        this.displayInterval ? this.timelineCtx.fillText(primaryCurrentSec.toString(), labelPadding * this.pixelRatio, 8) : null;
+    }
+
+    renderPrimaryStride(primaryCurrentPixel){
+        this.direction === 'top' ? this.timelineCtx.fillRect(primaryCurrentPixel, 0, this.strideWidth, this.height) :
+            this.timelineCtx.fillRect(primaryCurrentPixel, 12, this.strideWidth, this.height);
+    }
+
+    setFonts(fontSize, fontFamily) {
+        //not working :(
+        this.timelineCanvas.getContext('2d').font = `${fontSize}px ${fontFamily}`;
     }
 }
 

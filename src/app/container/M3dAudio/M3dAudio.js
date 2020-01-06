@@ -48,7 +48,7 @@ class M3dAudio {
         this.plugins.map((plugin)=>{
             switch(plugin.type){
                 case 'timeline':
-                    const t = new WaveTimeline(plugin, this);
+                    const t = new WaveTimeline(plugin.params, this);
                     t.init();
                     break;
             }
@@ -180,7 +180,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         this.wave_canvas.clearWave();
-        this.wave_wrapper.drawWave(peaks, 0, start, end);
+        // this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {
