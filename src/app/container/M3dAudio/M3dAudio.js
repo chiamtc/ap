@@ -245,7 +245,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         this.wave_canvas.clearWave();
-        this.wave_wrapper.drawWave(peaks, 0, start, end);
+        // this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {

@@ -172,7 +172,8 @@ class AudioPlayer extends Component {
                 Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
-            <div style={{maxWidth: '600px', overflow: 'auto'}}>
+            {/*<div style={{maxWidth: '600px', overflow: 'auto'}}>*/}
+            <div>
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
                 <div id="waveform-timeline-bottom"/>

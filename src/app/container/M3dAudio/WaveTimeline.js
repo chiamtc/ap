@@ -56,7 +56,7 @@ class WaveTimeline {
         });
     }
 
-    redrawTimeline(){
+    redrawTimeline() {
         this.createContainer();
         this.createWrapper();
         this.createCanvas();
@@ -147,7 +147,7 @@ class WaveTimeline {
 
             const labelPadding = primaryCurrentSec < 10 ? primaryCurrentPixel - 2 : primaryCurrentPixel - 5;
             if (i === (duration / primaryInterval) - 1) { //last
-                this.renderPrimaryStride(primaryCurrentPixel);
+                this.renderPrimaryStride(primaryCurrentPixel - 2);
                 this.renderPrimaryLabel(primaryCurrentSec, labelPadding - 10);
             } else {
                 this.renderPrimaryStride(primaryCurrentPixel);
@@ -156,18 +156,19 @@ class WaveTimeline {
             primaryPixels.push(primaryCurrentPixel);
         }
 
+        //start of rendering secondary stride
         let secondaryPxPerSec = primaryPixels[0] / primaryInterval; //get the secondary pxPerSec
         let secondaryCurrentPixel = 0;
         primaryPixels.map((p) => {
             for (let j = 0; j < duration / primaryPixels.length; j++) {
                 if (j === 0) {
                     this.timelineCtx.fillRect(0, 0, this.strideWidth, this.height); //plot 0
-                    this.displayInterval ? this.timelineCtx.fillText('0', 0, 8) : null;
+                    this.displayInterval ? this.timelineCtx.fillText('0', 2, 8) : null;
                 } else {
                     secondaryCurrentPixel += secondaryPxPerSec;
                     this.direction === 'top' ?
-                        this.timelineCtx.fillRect(secondaryCurrentPixel, 0, this.strideWidth, this.height - 12) :
-                        this.timelineCtx.fillRect(secondaryCurrentPixel, this.height - 3, this.strideWidth, this.height)
+                        this.timelineCtx.fillRect(secondaryCurrentPixel, 0, this.strideWidth, this.height * 1 / 4) :
+                        this.timelineCtx.fillRect(secondaryCurrentPixel, this.height * 3 / 4, this.strideWidth, this.height)
                 }
             }
             secondaryCurrentPixel = p; //reset to the next primary Label
@@ -180,7 +181,7 @@ class WaveTimeline {
 
     renderPrimaryStride(primaryCurrentPixel) {
         this.direction === 'top' ? this.timelineCtx.fillRect(primaryCurrentPixel, 0, this.strideWidth, this.height) :
-            this.timelineCtx.fillRect(primaryCurrentPixel, 12, this.strideWidth, this.height);
+            this.timelineCtx.fillRect(primaryCurrentPixel, this.height / 2, this.strideWidth, this.height);
     }
 
     setFonts(fontSize, fontFamily) {
