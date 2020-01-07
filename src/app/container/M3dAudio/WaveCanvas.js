@@ -61,7 +61,6 @@ export default class WaveCanvas {
     }
 
     drawLine(peaks, absmax, halfH, offsetY) {
-
         const length = peaks.length / 2;
         const first = Math.round(length * this.start);
 
@@ -101,11 +100,7 @@ export default class WaveCanvas {
             this.mainWave_ctx.lineTo((j - first) * scale + this.halfPixel, halfOffset - h);
         }
 
-        this.mainWave_ctx.lineTo(
-            (canvasStart - first) * scale,
-            halfOffset -
-            Math.round((peaks[2 * canvasStart + 1] || 0) / absmaxHalf)
-        );
+        this.mainWave_ctx.lineTo((canvasStart - first) * scale, halfOffset - Math.round((peaks[2 * canvasStart + 1] || 0) / absmaxHalf));
 
         this.mainWave_ctx.closePath();
         this.mainWave_ctx.fill(); //this.mainWave_ctx.stroke();

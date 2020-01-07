@@ -183,8 +183,7 @@ class M3dAudio {
     * 4. apply filter using defaultFilter.
     * */
     async load(url) {
-        const ab = await this.getArrayBuffer(url);
-        this.loadArrayBuffer(ab);
+        this.loadArrayBuffer(await this.getArrayBuffer(url));
     }
 
     async getArrayBuffer(url) {

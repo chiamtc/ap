@@ -67,7 +67,7 @@ class AudioPlayer extends Component {
             amplitude: 1,
             fill: true,
             scroll: true,
-            responsive: true,
+            responsive: true, //will expand the width, causes re-calculate of peak
             mainWaveStyle: {
                 backgroundColor: 'transparent',
                 lineColor: 'rgb(40, 170, 226)'
@@ -158,6 +158,8 @@ class AudioPlayer extends Component {
                 {this.renderOptions()}
             </select>
             <button disabled={this.state.status === 'unready'} onClick={this.play}>{this.renderStatus()}</button>
+            <p>play time: {this.state.time} s</p>
+            <p>played percentage: {this.state.percent} % </p>
             <hr/>
             <div>
                 Volume: <input type="range" min="0" max="10" step="0.5" defaultValue={1} onChange={this.changeVolume}/>
@@ -165,13 +167,10 @@ class AudioPlayer extends Component {
             </div>
             <hr/>
             <div>
-                <p>play time: {this.state.time} s</p>
-                <p>played percentage: {this.state.percent} % </p>
-            </div>
-            <div>
                 Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
+            <hr/>
             {/*<div style={{maxWidth: '600px', overflow: 'auto'}}>*/}
             <div>
                 <div id="waveform-timeline-top"/>
