@@ -1,8 +1,7 @@
-
 //web audio api constant
 export const SUSPENDED = 'suspended';
 
-//status
+//status for webAudio_state Subject and frontend consumer
 export const PREPARING = 'preparing'
 export const UNREADY = 'unready';
 export const READY = 'ready';

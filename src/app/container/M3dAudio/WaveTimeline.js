@@ -3,7 +3,7 @@ import {subjects} from "./M3dAudio";
 
 class WaveTimeline {
     constructor(params, m3dAudio) {
-        this.m3dAudio = m3dAudio
+        this.m3dAudio = m3dAudio;
 
         //container which is to hold wrapper and wrapper's subsequent elements
         this.container_id = params.container_id;
@@ -41,31 +41,26 @@ class WaveTimeline {
 
     init() {
         this.setM3dAudioState();
-        this.createContainer();
-        this.createWrapper();
-        this.createCanvas();
-        this.renderTimeline();
+        this.redrawTimeline();
         subjects.m3dAudio_control.subscribe((event) => {
             if (event.type === 'zoom') {
                 this.scroll = event.value.scroll;
                 this.clearTimeline();
-                this.createContainer();
-                this.createWrapper();
-                this.createCanvas();
-                this.renderTimeline();
+                this.redrawTimeline();
             }
         });
-
         this.m3dAudio.wave_wrapper.mainWave_wrapper.addEventListener('scroll', this.onScroll);
+        subjects.waveWrapper_state.subscribe((res) => {
+            this.clearTimeline();
+            this.redrawTimeline();
+        });
     }
 
-    //receives scroll event from mainwave_wrapper and update the scroll left
-    onScroll = () => this.wrapper.scrollLeft = this.drawer.mainWave_wrapper.scrollLeft;
-
-
-    clearTimeline() {
-        this.wrapper.removeChild(this.timelineCanvas);//not sure if it's efficient?
-        // this.timelineCanvas.getContext('2d').clearRect(0,0,this.width, this.height);
+    redrawTimeline(){
+        this.createContainer();
+        this.createWrapper();
+        this.createCanvas();
+        this.renderTimeline();
     }
 
     setM3dAudioState() {
@@ -106,11 +101,6 @@ class WaveTimeline {
         }
     }
 
-    setCanvasStyle() {
-        this.setFonts(this.fontSize, this.fontFamily);
-    }
-
-
     createCanvas() {
         const canvasEle = document.createElement('canvas');
         this.timelineCanvas = this.wrapper.appendChild(canvasEle);
@@ -128,6 +118,20 @@ class WaveTimeline {
             left: 0
         });
     }
+
+    clearTimeline() {
+        this.wrapper.removeChild(this.timelineCanvas);//not sure if it's efficient?
+        // this.timelineCanvas.getContext('2d').clearRect(0,0,this.width, this.height);
+    }
+
+    setCanvasStyle() {
+        this.setFonts(this.fontSize, this.fontFamily);
+    }
+
+    //TODO: make a new generic document/window event and extends from it
+    //receives scroll event from mainwave_wrapper and update the scroll left
+    onScroll = () => this.wrapper.scrollLeft = this.drawer.mainWave_wrapper.scrollLeft;
+
 
     renderTimeline() {
         const duration = this.m3dAudio.web_audio.getDuration(); //total duration of the audio
@@ -174,7 +178,7 @@ class WaveTimeline {
         this.displayInterval ? this.timelineCtx.fillText(primaryCurrentSec.toString(), labelPadding * this.pixelRatio, 8) : null;
     }
 
-    renderPrimaryStride(primaryCurrentPixel){
+    renderPrimaryStride(primaryCurrentPixel) {
         this.direction === 'top' ? this.timelineCtx.fillRect(primaryCurrentPixel, 0, this.strideWidth, this.height) :
             this.timelineCtx.fillRect(primaryCurrentPixel, 12, this.strideWidth, this.height);
     }

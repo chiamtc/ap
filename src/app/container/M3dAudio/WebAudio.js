@@ -1,6 +1,6 @@
 import {Observable} from "rxjs";
 import {subjects} from './M3dAudio';
-import {SUSPENDED, PLAYING, PAUSED, FINISHED} from './constants';
+import {SUSPENDED, PLAYING, PAUSED, FINISHED,READY} from './constants';
 
 class WebAudio {
     static scriptBufferSize = 512;
@@ -143,7 +143,7 @@ class WebAudio {
         this.lastPlay = this.audioContext.currentTime;
         this.buffer = audioBuffer;
         this.createBufferSource();
-        subjects.webAudio_state.next('ready'); //fire webAudio_state(READY:string):Subscription event
+        subjects.webAudio_state.next(READY); //fire webAudio_state(READY:string):Subscription event
     }
 
     createBufferSource() {

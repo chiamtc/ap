@@ -67,6 +67,7 @@ class AudioPlayer extends Component {
             amplitude: 1,
             fill: true,
             scroll: true,
+            responsive: true,
             mainWaveStyle: {
                 backgroundColor: 'transparent',
                 lineColor: 'rgb(40, 170, 226)'
@@ -171,11 +172,11 @@ class AudioPlayer extends Component {
                 Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
-
-            <div id="waveform-timeline-top"/>
-            <div id="waveform-container"/>
-            <div id="waveform-timeline-bottom"/>
-
+            <div style={{maxWidth: '600px', overflow: 'auto'}}>
+                <div id="waveform-timeline-top"/>
+                <div id="waveform-container"/>
+                <div id="waveform-timeline-bottom"/>
+            </div>
         </div>
     }
 }

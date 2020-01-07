@@ -117,7 +117,7 @@ export default class WaveWrapper {
         } else {
             progress = (clientX - bbox.left + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
         }
-        subjects.waveWrapper_state.next({type: e.type, progress});
+        subjects.waveWrapper_state.next({type: e.type, value:progress});
     }
 
     getContainerWidth() {

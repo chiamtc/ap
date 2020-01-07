@@ -4,13 +4,56 @@ import WaveCanvas from './WaveCanvas';
 import HttpFetch from "./util/HttpFetch";
 import {Subject} from "rxjs";
 import WaveTimeline from "./WaveTimeline";
+import {debounceTime} from 'rxjs/operators'
+import {fromEvent} from 'rxjs';
 
 export const subjects = {
+    /**
+     * @title m3dAudio_state
+     * @description event indicator from webaudio.js (currently) to frontend consumer for ui rendering or something
+     * @format event:String , refers all the constants from constants/index.js
+     * @example .next(constants.PLAYING)
+     * @example .subscribe(state=> console.log(state)) //returns 'PLAYING'
+     * @currentUsage READY, PLAYING, PAUSED, FINISHED
+     * */
     m3dAudio_state: new Subject(),
-    m3dAudio_control: new Subject(), //external control, not the wrapper
-    webAudio_scriptNode_onaudioprocess: new Subject(),
+    /**
+     * @title m3dAudio_control
+     * @description external control that affects the wrapper. This is not to confuse with event that can be emitted from wrapper, which via Window or DOM API
+     * @format {type: event:String, value:Object} for .next(params) and when subscribing
+     * @example .next({type:'zoom', value:{level:x:Number}})
+     * @example .subscribe((res)=> console.log(res)) //returns {type:'zoom', value:{level:21}}
+     * @currentUsage 'zoom'
+     * */
+    m3dAudio_control: new Subject(),
+    /**
+     * @title webAudio_scripNode_onaudioprocess
+     * @description event subscription from ScriptProcessorNode.onaudioprocess
+     * @format value:Number , typically a float number from ScriptProcessorNode
+     * @example .next(controlEvent)
+     * @example .subscribe(controlEvent => console.log(controlEvent)) //returns 0.011239103912
+     * @currentUsage from webaudio.js and returns audioContext.currentTime in float number
+     * */
+    webAudio_scriptNode_onaudioprocess: new Subject(), //WEB_AUDIO: time in float
+    /**
+     * @title webAudio_state
+     * @description event indicator from webaudio.js
+     * @format event:String , refers all the constants from constants/index.js
+     * @example .next(constants.PLAYING)
+     * @example .subscribe(state=> console.log(state)) //returns 'PLAYING'
+     * @currentUsage READY, PLAYING, PAUSED, FINISHED
+     * */
     webAudio_state: new Subject(),
-    waveWrapper_state: new Subject()
+    /**
+     * @title waveWrapper_state
+     * @description event indicator from waveWrapper.js.handleEvent_mainWave(e)
+     * @format {event:String, value:Number}. Note: event is WindowEvent
+     * @example .next({event:String, value:Number})
+     * @example .subscribe(e=> console.log(e)) //returns {event:'click', value:0.51312}
+     * @currentUsage event/e = 'click':WindowEvent
+     * */
+    waveWrapper_state: new Subject(),
+    test: new Subject()
 };
 
 class M3dAudio {
@@ -34,6 +77,8 @@ class M3dAudio {
         this.minPxPerSec = 20; //for zoom
         this.pixelRatio = window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI;
         this.plugins = [];
+        this.previousWidth = 0;
+        this.responsive = false;
     }
 
     create(params) {
@@ -42,19 +87,14 @@ class M3dAudio {
         this.init();
         this.initListeners(params);
         this.wave_wrapper.addCanvases(this.wave_canvas);
-
     }
 
-    createPlugins() {
-        this.plugins.map((plugin) => {
-            switch (plugin.type) {
-                case 'timeline':
-                    const t = new WaveTimeline(plugin.params, this);
-                    t.init();
-                    break;
-            }
-        })
-
+    setRequiredParams(params) {
+        //set m3daudio properties. url param is passed via a function call, im not setting it unless we want to cache eagerly and store it in indexedDB on client's pc
+        this.filters = params.filters;
+        this.defaultFilter = params.filterId; //filterId recorded from mobile app
+        this.plugins = params.plugins;
+        this.responsive = params.responsive;
     }
 
     instantiate(params) {
@@ -82,13 +122,6 @@ class M3dAudio {
         this.wave_canvas.init();//wave_canvas:Canvas
     }
 
-    setRequiredParams(params) {
-        //set m3daudio properties. url param is passed via a function call, im not setting it unless we want to cache eagerly and store it in indexedDB on client's pc
-        this.filters = params.filters;
-        this.defaultFilter = params.filterId; //filterId recorded from mobile app
-        this.plugins = params.plugins;
-    }
-
     //listeners
     initListeners() {
         subjects.webAudio_state.subscribe((i) => {
@@ -99,19 +132,48 @@ class M3dAudio {
             subjects.m3dAudio_state.next(i);
         });
 
-        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => {
-            this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
-        });
+        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents()));
 
         subjects.waveWrapper_state.subscribe((i) => {
             switch (i.type) {
                 case 'click':
-                    this.seekTo(i.progress);
+                    this.seekTo(i.value);
                     break;
-                case 'dblclick':
+                case 'resize':
+                    this.redraw();
                     break;
             }
         });
+
+        if (this.responsive) {
+            fromEvent(window, 'resize').pipe(debounceTime(200))
+                .subscribe((e) => {
+                    if (this.previousWidth !== this.wave_wrapper.mainWave_wrapper.clientWidth) {
+                        if (this.wave_wrapper.mainWave_wrapper.clientWidth >= 300) {
+                            this.previousWidth = this.wave_wrapper.mainWave_wrapper.clientWidth;
+                            subjects.waveWrapper_state.next({
+                                type: 'resize',
+                                value: {width: this.wave_wrapper.mainWave_wrapper.clientWidth}
+                            })
+                        } else {
+                            console.log(`window size is too small. current size: ${this.wave_wrapper.mainWave_wrapper.clientWidth}px`)
+                            //TODO: make a notification saying it's way too small, a subject for audioplayer.js to subscribe
+                        }
+                    }
+                });
+        }
+    }
+
+    createPlugins() {
+        this.plugins.map((plugin) => {
+            switch (plugin.type) {
+                case 'timeline':
+                    const t = new WaveTimeline(plugin.params, this);
+                    t.init();
+                    break;
+                //case 'spectrogram':
+            }
+        })
     }
 
     /*
@@ -222,6 +284,11 @@ class M3dAudio {
         return this.web_audio.getCurrentTime();
     }
 
+    redraw() {
+        this.drawBuffer();
+        this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
+    }
+
     zoom(level) {
         if (!level) {
             // this.minPxPerSec = this.minPxPerSec;
@@ -235,8 +302,7 @@ class M3dAudio {
             this.wave_wrapper.scroll = true;
             this.wave_wrapper.autoCenter = true;
         }
-        this.drawBuffer();
-        this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents());
+        this.redraw();
         this.wave_wrapper.recenter(this.getCurrentTime() / this.getDuration());
         subjects.m3dAudio_control.next({type: 'zoom', value: {scroll: true}})
     }
