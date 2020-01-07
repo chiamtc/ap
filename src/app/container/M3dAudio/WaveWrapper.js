@@ -149,9 +149,9 @@ export default class WaveWrapper {
             this.lastPos = pos;
             if (this.scroll && this.autoCenter) {
                 const newPos = ~~(this.mainWave_wrapper.scrollWidth * progress);
-                this.recenterOnPosition(newPos, true);
+                this.recenterOnPosition(newPos, false);
             }
-            style(this.progressWave_wrapper, {display: 'block', width: `${pos}px`});
+            style(this.progressWave_wrapper, {width: `${pos}px`});
         }
     }
 
@@ -279,10 +279,10 @@ export default class WaveWrapper {
 
     updateSize() {
         //used to be like this if we want to set overlap.
-        let canvasWidth = this.width - this.maxCanvasWidth * 0;
-        const elementWidth = Math.round(canvasWidth / this.pixelRatio);
+        const elementWidth = Math.round(this.width / this.pixelRatio);
         const totalWidth = Math.round(this.width / this.pixelRatio); //TODO: this.width not this.getWidth()
-        this.wave_canvas.updateDimensions(elementWidth, totalWidth, canvasWidth, this.height);
+        this.wave_canvas.updateDimensions(elementWidth, totalWidth, this.width, this.height);
+        style(this.progressWave_wrapper, {display:'block'});
     }
 
     addCursor() {

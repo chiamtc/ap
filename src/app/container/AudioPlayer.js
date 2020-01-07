@@ -63,8 +63,9 @@ class AudioPlayer extends Component {
             container_id: '#waveform-container',
             filters: this.props.filters,
             filterId: this.props.filterId,
-            height: 250,
+            height: 300,
             amplitude: 1,
+            normalize:false,
             fill: true,
             scroll: true,
             responsive: true, //will expand the width, causes re-calculate of peak
@@ -73,8 +74,7 @@ class AudioPlayer extends Component {
                 lineColor: 'rgb(40, 170, 226)'
             },
             progressWaveStyle: {
-                backgroundColor: 'rgba(40, 170, 226,0.05)',
-                lineColor: 'violet'
+                backgroundColor: 'rgba(40, 170, 226,0.1)'
             },
             cursorStyle: {
                 borderRightWidth: '2px',
@@ -158,6 +158,7 @@ class AudioPlayer extends Component {
                 {this.renderOptions()}
             </select>
             <button disabled={this.state.status === 'unready'} onClick={this.play}>{this.renderStatus()}</button>
+
             <p>play time: {this.state.time} s</p>
             <p>played percentage: {this.state.percent} % </p>
             <hr/>
@@ -171,7 +172,7 @@ class AudioPlayer extends Component {
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
             <hr/>
-            {/*<div style={{maxWidth: '600px', overflow: 'auto'}}>*/}
+            {/*<div style={{width:'600px', overflow:'auto'}}>*/}
             <div>
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>

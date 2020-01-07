@@ -28,6 +28,7 @@ class WaveTimeline {
 
         this.displayInterval = params.displayInterval;
         this.strideWidth = params.strideWidth || 1;
+        this.clipping = true; //TODO: expose to params
     }
 
     /*
@@ -87,9 +88,12 @@ class WaveTimeline {
             //styling
             style(this.wrapper, {
                 display: 'block',
-                position: 'relative',
-                height: `${this.height}px`
-            })
+                position: 'relative' ,//'relative',
+                height: `${this.height}px`,
+            });
+            this.clipping? style(this.wrapper,{
+                top: this.direction === 'top' ? `${this.height}px`: `-${this.height}px`
+            }): null;
         }
 
         if (this.m3dAudio.fill || this.m3dAudio.scroll) {

@@ -52,8 +52,7 @@ export const subjects = {
      * @example .subscribe(e=> console.log(e)) //returns {event:'click', value:0.51312}
      * @currentUsage event/e = 'click':WindowEvent
      * */
-    waveWrapper_state: new Subject(),
-    test: new Subject()
+    waveWrapper_state: new Subject()
 };
 
 class M3dAudio {
@@ -132,7 +131,9 @@ class M3dAudio {
             subjects.m3dAudio_state.next(i);
         });
 
-        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents()));
+        subjects.webAudio_scriptNode_onaudioprocess.subscribe((i) => {
+            this.wave_wrapper.renderProgressWave(this.web_audio.getPlayedPercents())
+        });
 
         subjects.waveWrapper_state.subscribe((i) => {
             switch (i.type) {
@@ -211,12 +212,17 @@ class M3dAudio {
     }
 
     drawBuffer() {
+        //determine changing width
         const nominalWidth = Math.round(this.getDuration() * this.minPxPerSec * this.pixelRatio);
+        //mainwavewrapper width
         const parentWidth = this.wave_wrapper.getContainerWidth();
+
+        //assign temporarily
         let width = nominalWidth;
         // always start at 0 after zooming for scrolling : issue redraw left part
         let start = 0;
-        let end = Math.max(start + parentWidth, width); //600 = Math.max between 600 and 400
+        //determine whether parent or nominal width is bigger, if nominal width is bigger than parent width, resize;
+        let end = Math.max(start + parentWidth, width);
         // Fill container
         if (this.fill && (!this.scroll || nominalWidth < parentWidth)) {
             width = parentWidth;
@@ -243,8 +249,8 @@ class M3dAudio {
          }
          */
         this.wave_wrapper.setWidth(width);
-        this.wave_canvas.clearWave();
-        // this.wave_wrapper.drawWave(peaks, 0, start, end);
+        // this.wave_canvas.clearWave(); //always clear wave before drawing, not so efficient. Used to apply it, i commented it out to see the performance differences as of date 07/01/2020
+        this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {
@@ -252,7 +258,6 @@ class M3dAudio {
     }
 
     play(start, end) {
-        // this.fireEvent('interaction', () => this.play(start, end));
         if (this.isMuted) this.web_audio.setGain(0);
         this.web_audio.setGain(this.savedVolume);
         return this.web_audio.play(start, end);
@@ -295,11 +300,10 @@ class M3dAudio {
             this.wave_wrapper.scroll = false;
             this.wave_wrapper.autoCenter = false;
         } else {
-            //executed here
             this.minPxPerSec = level;
             this.scroll = true;
             this.wave_wrapper.scroll = true;
-            this.wave_wrapper.autoCenter = true;
+            this.wave_wrapper.autoCenter = true; //has to be true otherwise, it will always center and renders the "selected" timeframe
         }
         this.redraw();
         this.wave_wrapper.recenter(this.getCurrentTime() / this.getDuration());

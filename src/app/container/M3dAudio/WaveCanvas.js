@@ -57,7 +57,7 @@ export default class WaveCanvas {
         // set progresswave canvas dimensions and display block to make it visible
         this.progressWave_canvas.width = width;
         this.progressWave_canvas.height = height;
-        style(this.progressWave_canvas, {...elementSize, display: 'block'});
+        style(this.progressWave_canvas, elementSize);
     }
 
     drawLine(peaks, absmax, halfH, offsetY) {
