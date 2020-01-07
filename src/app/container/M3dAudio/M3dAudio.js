@@ -94,6 +94,9 @@ class M3dAudio {
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
         this.plugins = params.plugins;
         this.responsive = params.responsive;
+        this.minZoom = params.minZoom;
+        this.maxZoom = params.maxZoom;
+        this.minPxPerSec = params.minZoom;
     }
 
     instantiate(params) {

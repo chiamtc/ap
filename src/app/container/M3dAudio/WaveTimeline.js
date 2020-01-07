@@ -48,6 +48,8 @@ class WaveTimeline {
                 this.scroll = event.value.scroll;
                 this.clearTimeline();
                 this.redrawTimeline();
+                const scrolbarHeight = this.m3dAudio.wave_wrapper.height - this.m3dAudio.wave_wrapper.mainWave_wrapper.scrollHeight;
+                scrolbarHeight !== 0 ? style(this.container, {top: `-${this.height + scrolbarHeight}px`}) : style(this.container, {top: `-${this.height}px`})
             }
         });
         this.m3dAudio.wave_wrapper.mainWave_wrapper.addEventListener('scroll', this.onScroll);
@@ -86,14 +88,22 @@ class WaveTimeline {
             const wrapper = document.createElement('timeline');
             this.wrapper = this.container.appendChild(wrapper);
             //styling
+            style(this.container, {
+                display: 'block',
+                position: this.direction === 'top' ? 'absolute' : 'relative', //absolute for top timeline display to clip and goes for bottom
+                height: `${this.height}px`,
+                width: '100%',
+            });
+
+            if (this.clipping && this.direction === 'bottom') {
+                style(this.container, {top: `-${this.height}px`});
+            }
+
             style(this.wrapper, {
                 display: 'block',
-                position: 'relative' ,//'relative',
+                position: 'relative',//'relative',
                 height: `${this.height}px`,
             });
-            this.clipping? style(this.wrapper,{
-                top: this.direction === 'top' ? `${this.height}px`: `-${this.height}px`
-            }): null;
         }
 
         if (this.m3dAudio.fill || this.m3dAudio.scroll) {
@@ -118,7 +128,6 @@ class WaveTimeline {
             position: 'absolute',
             zIndex: 4,
             width: `${canvasWidth}px`,
-            height: `${this.height}px`,
             left: 0
         });
     }

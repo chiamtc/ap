@@ -64,6 +64,7 @@ export default class WaveWrapper {
             display: 'block',
             position: 'relative',
             height: `${this.height}px`,
+            zIndex:99
         });
         if (this.fill || this.scroll) {
             style(wrapper, {

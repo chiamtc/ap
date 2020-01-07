@@ -68,6 +68,8 @@ class AudioPlayer extends Component {
             normalize:false,
             fill: true,
             scroll: true,
+            minZoom:20,
+            maxZoom:200,
             responsive: true, //will expand the width, causes re-calculate of peak
             mainWaveStyle: {
                 backgroundColor: 'transparent',
