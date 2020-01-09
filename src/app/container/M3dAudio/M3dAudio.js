@@ -145,7 +145,7 @@ class M3dAudio {
         subjects.waveWrapper_state.subscribe((i) => {
             switch (i.type) {
                 case 'click':
-                    // this.seekTo(i.value);
+                    this.seekTo(i.value);
                     break;
                 case 'resize':
                     this.redraw();
@@ -261,7 +261,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         // this.wave_canvas.clearWave(); //always clear wave before drawing, not so efficient. Used to apply it, i commented it out to see the performance differences as of date 07/01/2020
-        // this.wave_wrapper.drawWave(peaks, 0, start, end);
+        this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {

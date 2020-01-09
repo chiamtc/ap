@@ -63,13 +63,13 @@ class AudioPlayer extends Component {
             container_id: '#waveform-container',
             filters: this.props.filters,
             filterId: this.props.filterId,
-            height: 300,
+            height: 200,
             amplitude: 1,
-            normalize:false,
+            normalize: false,
             fill: true,
             scroll: true,
-            minZoom:20,
-            maxZoom:200,
+            minZoom: 20,
+            maxZoom: 200,
             responsive: true, //will expand the width, causes re-calculate of peak
             mainWaveStyle: {
                 backgroundColor: 'transparent',
@@ -84,10 +84,12 @@ class AudioPlayer extends Component {
             },
             plugins: [
                 {
-                    type:'spectrogram',
-                    params:{
-                        container_id : '#waveform-spectrogram',
-                        fftSamples:1024,
+                    type: 'spectrogram',
+                    params: {
+                        container_id: '#waveform-spectrogram',
+                        fftSamples: 2048,
+                        windowFunc: 'hamming',
+                        noverlap: 1280
                     }
                 },
                 {
@@ -108,7 +110,7 @@ class AudioPlayer extends Component {
                         displayInterval: true
                     }
                 },
-              ]
+            ]
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
@@ -184,8 +186,8 @@ class AudioPlayer extends Component {
             </div>
             <hr/>
             {/*<h1>some random txt</h1>*/}
-            <div style={{width:'600px', overflow:'auto'}}>
-            {/*<div>*/}
+            <div style={{width: '600px', overflow: 'auto'}}>
+                {/*<div>*/}
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
                 <div id="waveform-spectrogram"/>

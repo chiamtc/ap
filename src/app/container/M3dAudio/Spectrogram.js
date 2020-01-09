@@ -352,7 +352,7 @@ class Spectrogram {
 
     getFrequencies(cb) {
         const fftSamples = this.fftSamples;
-        const buffer = (this.buffer = this.m3dAudio.web_audio.buffer);
+        const buffer = (this.buffer = this.m3dAudio.web_audio.filteredBuffer);
         const channelOne = buffer.getChannelData(0);
         const bufferLength = buffer.length;
         const sampleRate = buffer.sampleRate;
@@ -405,16 +405,18 @@ class Spectrogram {
                 my.spectrogramCtx.beginPath();
                 // my.spectrCc.rect()
                 my.spectrogramCtx.fillStyle =
-                    /*  'rgba(' +
-                      colorMap[0] * 256 +
-                      ', ' +
-                      colorMap[1] * 256 +
-                      ', ' +
-                      colorMap[2] * 256 +
-                      ',' +
-                      colorMap[3] +
-                      ')';*/
-                    pixels[i][j];
+                /*  'rgba(' +
+                  colorMap[0] * 256 +
+                  ', ' +
+                  colorMap[1] * 256 +
+                  ', ' +
+                  colorMap[2] * 256 +
+                  ',' +
+                  colorMap[3] +
+                  ')';*/
+
+                colours(pixels[i][j] * 100).hex();
+                // pixels[i][j];
                 my.spectrogramCtx.fillRect(
                     i,
                     height - j * heightFactor,
@@ -465,9 +467,10 @@ class Spectrogram {
 
             for (m = 0; m < oldMatrix[0].length; m++) {
                 intColumn[m] = column[m];
-                colorColumn[m] = colours2(column[m] *100).hex();
+                // colorColumn[m] = colours(column[m]* 200).hex();
             }
-            newMatrix.push(colorColumn);
+            // newMatrix.push(colorColumn);
+            newMatrix.push(intColumn);
         }
         return newMatrix;
     }

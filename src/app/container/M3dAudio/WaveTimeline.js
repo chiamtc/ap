@@ -133,7 +133,7 @@ class WaveTimeline {
         canvasEle.height = (this.height + 1) * this.pixelRatio;
         style(this.timelineCanvas, {
             position: 'absolute',
-            zIndex: 4,
+            zIndex: 5,
             width: `${canvasWidth}px`,
             left: 0
         });
