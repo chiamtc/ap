@@ -1,4 +1,4 @@
-export const fft = function (bufferSize, sampleRate, windowFunc, alpha) {
+export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
     this.bufferSize = bufferSize;
     this.sampleRate = sampleRate;
     this.bandwidth = (2 / bufferSize) * (sampleRate / 2);
@@ -228,8 +228,20 @@ export const fft = function (bufferSize, sampleRate, windowFunc, alpha) {
 
 import style from "./util/Style";
 
-//TODO: develop like spectrogram. try not to append onto mainwave_wrapper
+let Chroma = require("chroma-js");
 
+const colours = Chroma.scale([
+    '#ffffff',
+    '#ffa500',
+    '#ff0000',
+    '#ff0000',
+    '#ff0000',
+]);
+const colours2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']); //
+const colours3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
+//TODO: read
+// https://dsp.stackexchange.com/questions/42428/understanding-overlapping-in-stft
+// https://dsp.stackexchange.com/questions/47448/window-periodoverlap-and-fft
 class Spectrogram {
     constructor(params, m3dAudio) {
         this.m3dAudio = m3dAudio;
@@ -248,6 +260,7 @@ class Spectrogram {
         this.windowFunc = params.windowFunc;
         this.alpha = params.alpha;
         this.height = m3dAudio.wave_wrapper.height;
+        this.width = m3dAudio.wave_wrapper.width;
         this.maxCanvasWidth = this.m3dAudio.wave_wrapper.maxCanvasWidth;
         this.maxCanvasElementWidth =
             this.drawer.maxCanvasElementWidth ||
@@ -262,6 +275,7 @@ class Spectrogram {
         this.createContainer(); //comment it out for <spectrogram> tag instead of <div> <spectrogram> </div>
         this.createWrapper();
         this.createCanvas();
+        this.renderSpectrogram();
     }
 
     //TODO setM3dAudioState()
@@ -310,22 +324,154 @@ class Spectrogram {
         const canvasEle = document.createElement('canvas');
         this.spectrogramCanvas = this.wrapper.appendChild(canvasEle);
         this.spectrogramCtx = this.spectrogramCanvas.getContext('2d', {desynchronized: true});
-        const canvasWidth = this.m3dAudio.wave_wrapper.mainWave_wrapper.scrollWidth - this.maxCanvasElementWidth * 0;
-        canvasEle.width = canvasWidth * this.pixelRatio;
-        canvasEle.height = (this.height + 1) * this.pixelRatio;
         style(this.spectrogramCanvas, {
             position: 'absolute',
             zIndex: 4,
-            width: `${canvasWidth}px`,
             left: 0,
         });
+
+    }
+
+    renderSpectrogram() {
+        const canvasWidth = this.m3dAudio.wave_wrapper.mainWave_wrapper.scrollWidth - this.maxCanvasElementWidth * 0;
+        this.spectrogramCanvas.width = canvasWidth * this.pixelRatio;
+        this.spectrogramCanvas.height = (this.height + 1) * this.pixelRatio;
+        this.spectrogramCanvas.style.width = canvasWidth;
+        this.width = this.m3dAudio.wave_wrapper.width;
+        console.log(this.m3dAudio)
+        console.log(this.m3dAudio.wave_wrapper.width, this.width);
+        // width: `${canvasWidth}px`,
         // this.spectrogramCtx.fillStyle = 'green';
-        // this.spectrogramCtx.fillRect(0, this.height -20, 20, 20);
+        // this.spectrogramCtx.fillRect(0, this.height - 20, 20, 20);
         // this.spectrogramCtx.beginPath();       // Start a new path
         // this.spectrogramCtx.moveTo(0, this.height-5);    // Move the pen to (30, 50)
         // this.spectrogramCtx.lineTo(150, this.height-5);  // Draw a line to (150, 100)
         // this.spectrogramCtx.stroke();
+        this.getFrequencies(this.drawSpectrogram);
     }
+
+    getFrequencies(cb) {
+        const fftSamples = this.fftSamples;
+        const buffer = (this.buffer = this.m3dAudio.web_audio.buffer);
+        const channelOne = buffer.getChannelData(0);
+        const bufferLength = buffer.length;
+        const sampleRate = buffer.sampleRate;
+        const frequencies = [];
+        if (!buffer) {
+            // this.fireEvent('error', 'Web Audio buffer is not available');
+            return;
+        }
+
+        let noverlap = this.noverlap;
+        if (!noverlap) {
+            const uniqueSamplesPerPx = buffer.length / this.spectrogramCanvas.width;
+            noverlap = Math.max(0, Math.round(fftSamples - uniqueSamplesPerPx));
+        }
+        const fft = new FFT(fftSamples, sampleRate, this.windowFunc, this.alpha);
+        let currentOffset = 0;
+
+        while (currentOffset + fftSamples < channelOne.length) {
+            const segment = channelOne.slice(
+                currentOffset,
+                currentOffset + fftSamples
+            );
+            const spectrum = fft.calculateSpectrum(segment);
+
+            const array = new Uint8Array(fftSamples / 2);
+            let j;
+            for (j = 0; j < fftSamples / 2; j++) {
+                array[j] = Math.max(-255, Math.log10(spectrum[j]) * 45);
+            }
+            // frequencies.push(array);
+            frequencies.push(spectrum); //using this same as central not array. TODO: more research
+            currentOffset += fftSamples - noverlap;
+        }
+        // console.log(frequencies); //TODO; callback(frequencies, this);
+
+        cb(frequencies, this);
+    }
+
+    drawSpectrogram(frequenciesData, my) {
+        const spectrCc = my.spectrogramCtx;
+        const length = my.m3dAudio.web_audio.getDuration();
+        const height = my.height;
+        const pixels = my.resample(frequenciesData);
+        const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
+        let i;
+        let j;
+        for (i = 0; i < pixels.length; i++) {
+            for (j = 0; j < pixels[i].length; j++) {
+                // const colorMap = my.colorMap[pixels[i][j]];
+                my.spectrogramCtx.beginPath();
+                // my.spectrCc.rect()
+                my.spectrogramCtx.fillStyle =
+                    /*  'rgba(' +
+                      colorMap[0] * 256 +
+                      ', ' +
+                      colorMap[1] * 256 +
+                      ', ' +
+                      colorMap[2] * 256 +
+                      ',' +
+                      colorMap[3] +
+                      ')';*/
+                    pixels[i][j];
+                my.spectrogramCtx.fillRect(
+                    i,
+                    height - j * heightFactor,
+                    1,
+                    heightFactor
+                );
+            }
+        }
+    }
+
+
+    resample(oldMatrix) {
+
+        const columnsNumber = this.width;
+        const newMatrix = [];
+
+        const oldPiece = 1 / oldMatrix.length;
+        const newPiece = 1 / columnsNumber;
+        let i;
+
+        for (i = 0; i < columnsNumber; i++) {
+            const column = new Array(oldMatrix[0].length);
+            let j;
+
+            for (j = 0; j < oldMatrix.length; j++) {
+                const oldStart = j * oldPiece;
+                const oldEnd = oldStart + oldPiece;
+                const newStart = i * newPiece;
+                const newEnd = newStart + newPiece;
+
+                const overlap = oldEnd <= newStart || newEnd <= oldStart ? 0 : Math.min(Math.max(oldEnd, newStart), Math.max(newEnd, oldStart)) - Math.max(Math.min(oldEnd, newStart), Math.min(newEnd, oldStart));
+                let k;
+                /* eslint-disable max-depth */
+                if (overlap > 0) {
+                    for (k = 0; k < oldMatrix[0].length; k++) {
+                        if (column[k] == null) {
+                            column[k] = 0;
+                        }
+                        column[k] += (overlap / newPiece) * oldMatrix[j][k];
+                    }
+                }
+                /* eslint-enable max-depth */
+            }
+
+            const intColumn = new Array(oldMatrix[0].length);
+            const colorColumn = new Array(oldMatrix[0].length);
+            let m;
+
+            for (m = 0; m < oldMatrix[0].length; m++) {
+                intColumn[m] = column[m];
+                colorColumn[m] = colours2(column[m] *100).hex();
+            }
+            newMatrix.push(colorColumn);
+        }
+        return newMatrix;
+    }
+
 }
 
 export default Spectrogram;

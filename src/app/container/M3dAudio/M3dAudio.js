@@ -130,7 +130,7 @@ class M3dAudio {
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
             if (i === 'ready') { //make it to switch statement if there's other mechanism other than 'ready'
-                this.createPlugins(); //create plugin when webaudiostate is ready;
+                setTimeout(()=> this.createPlugins(), 0); //create plugin when webaudiostate is ready;
                 // const fft = new FFT(512, 48000);
                 // console.log(this.state.m3dAudio.web_audio);//.filteredBuffer.getChannelData(0))
                 // console.log(fft.calculateSpectrum(this.web_audio.filteredBuffer.getChannelData(0).slice(0,512)))
@@ -145,7 +145,7 @@ class M3dAudio {
         subjects.waveWrapper_state.subscribe((i) => {
             switch (i.type) {
                 case 'click':
-                    this.seekTo(i.value);
+                    // this.seekTo(i.value);
                     break;
                 case 'resize':
                     this.redraw();
@@ -180,11 +180,12 @@ class M3dAudio {
                     t.init();
                     break;
                 case 'spectrogram':
+                    console.log(this.wave_wrapper.width)
                     const p = new Spectrogram(plugin.params, this);
                     p.init();
                     break;
             }
-        })
+        });
     }
 
     /*

@@ -184,8 +184,8 @@ class AudioPlayer extends Component {
             </div>
             <hr/>
             {/*<h1>some random txt</h1>*/}
-            {/*<div style={{width:'600px', overflow:'auto'}}>*/}
-            <div>
+            <div style={{width:'600px', overflow:'auto'}}>
+            {/*<div>*/}
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
                 <div id="waveform-spectrogram"/>
