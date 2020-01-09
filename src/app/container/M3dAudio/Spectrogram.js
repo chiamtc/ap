@@ -264,11 +264,14 @@ class Spectrogram {
         this.createCanvas();
     }
 
+    //TODO setM3dAudioState()
+
+
     createContainer() {
         const container = document.querySelector(this.container_id);
         if (!container) throw new Error("No container element id found. Pass container id as a string.");
         else this.container = container;
-        this.m3dAudio.wave_wrapper.mainWave_wrapper.appendChild(this.container); //append onto mainWave ?
+        // this.m3dAudio.wave_wrapper.mainWave_wrapper.appendChild(this.container); //append onto mainWave ?
     }
 
     createWrapper() {
@@ -281,21 +284,14 @@ class Spectrogram {
             style(this.container, {
                 display: 'block',
                 position: 'relative',
-                // top:0,
-                // left:0,
-                height: `${this.height/this.pixelRatio}px`,
-                width: '100%',
-                zIndex: 1,
-                // height: `${this.height}/${this.pixelRatio}px`
+                top: `-${this.height}px`,
+                width: '100%'
             });
 
             style(this.wrapper, {
                 display: 'block',
                 position: 'absolute',
-                top:0,
-                left:0,
-                height: `${this.height/this.pixelRatio}px`
-                // zIndex:1, //1 = background, 6 = foreground
+                height: `${this.height}px`
             });
 
             if (this.m3dAudio.fill || this.m3dAudio.scroll) {
@@ -320,12 +316,11 @@ class Spectrogram {
         style(this.spectrogramCanvas, {
             position: 'absolute',
             zIndex: 4,
-            height:`${this.height/this.pixelRatio}px`,
             width: `${canvasWidth}px`,
             left: 0,
         });
-        this.spectrogramCtx.fillStyle = 'green';
-        this.spectrogramCtx.fillRect(0, this.height -20, 20, 20);
+        // this.spectrogramCtx.fillStyle = 'green';
+        // this.spectrogramCtx.fillRect(0, this.height -20, 20, 20);
         // this.spectrogramCtx.beginPath();       // Start a new path
         // this.spectrogramCtx.moveTo(0, this.height-5);    // Move the pen to (30, 50)
         // this.spectrogramCtx.lineTo(150, this.height-5);  // Draw a line to (150, 100)

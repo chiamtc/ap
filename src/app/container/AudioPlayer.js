@@ -183,7 +183,7 @@ class AudioPlayer extends Component {
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
             <hr/>
-            <h1>some random</h1>
+            {/*<h1>some random txt</h1>*/}
             {/*<div style={{width:'600px', overflow:'auto'}}>*/}
             <div>
                 <div id="waveform-timeline-top"/>
@@ -191,6 +191,7 @@ class AudioPlayer extends Component {
                 <div id="waveform-spectrogram"/>
                 <div id="waveform-timeline-bottom"/>
             </div>
+            <hr/>
         </div>
     }
 }

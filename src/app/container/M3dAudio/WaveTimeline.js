@@ -93,7 +93,7 @@ class WaveTimeline {
             style(this.container, {
                 display: 'block',
                 position: 'relative',//this.direction === 'top' ? 'absolute' : 'relative', //absolute for top timeline display to clip and goes for bottom
-                height: `${this.height}px`,
+                // height: `${this.height}px`,
                 width: '100%',
             });
 
