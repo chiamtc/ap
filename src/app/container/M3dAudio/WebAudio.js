@@ -176,7 +176,6 @@ class WebAudio {
     /* createAnalyserNode() {
          this.analyserNode = this.audioContext.createAnalyser();
          this.analyserNode.connect(this.gainNode);
-
          //this chunk of code was placed in createBufferSource()
          // this.analyserNode.fftSize = 1024;
          // this.analyserNode.connect(this.audioContext.destination);

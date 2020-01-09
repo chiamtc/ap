@@ -6,6 +6,7 @@ import {Subject} from "rxjs";
 import WaveTimeline from "./WaveTimeline";
 import {debounceTime} from 'rxjs/operators'
 import {fromEvent} from 'rxjs';
+import Spectrogram from "./Spectrogram";
 
 export const subjects = {
     /**
@@ -130,6 +131,9 @@ class M3dAudio {
             this.web_audio_state = i;
             if (i === 'ready') { //make it to switch statement if there's other mechanism other than 'ready'
                 this.createPlugins(); //create plugin when webaudiostate is ready;
+                // const fft = new FFT(512, 48000);
+                // console.log(this.state.m3dAudio.web_audio);//.filteredBuffer.getChannelData(0))
+                // console.log(fft.calculateSpectrum(this.web_audio.filteredBuffer.getChannelData(0).slice(0,512)))
             }
             subjects.m3dAudio_state.next(i);
         });
@@ -175,7 +179,10 @@ class M3dAudio {
                     const t = new WaveTimeline(plugin.params, this);
                     t.init();
                     break;
-                //case 'spectrogram':
+                case 'spectrogram':
+                    const p = new Spectrogram(plugin.params, this);
+                    p.init();
+                    break;
             }
         })
     }
@@ -253,7 +260,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         // this.wave_canvas.clearWave(); //always clear wave before drawing, not so efficient. Used to apply it, i commented it out to see the performance differences as of date 07/01/2020
-        this.wave_wrapper.drawWave(peaks, 0, start, end);
+        // this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {

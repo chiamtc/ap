@@ -35,7 +35,7 @@ export default class WaveCanvas {
         const progressWave_canvas = document.createElement('canvas');
         style(progressWave_canvas, {
             position: 'absolute',
-            left: '0px',
+            left: 0,
             top: 0,
             bottom: 0,
             height: '100%',
@@ -103,11 +103,15 @@ export default class WaveCanvas {
         this.mainWave_ctx.lineTo((canvasStart - first) * scale, halfOffset - Math.round((peaks[2 * canvasStart + 1] || 0) / absmaxHalf));
 
         this.mainWave_ctx.closePath();
-        this.mainWave_ctx.fill(); //this.mainWave_ctx.stroke();
+
+        // this.mainWave_ctx.stroke();
+        this.mainWave_ctx.fill();
     }
 
     setCtxWaveFillStyles(mainWaveColor, progressWaveColor) {
         this.mainWave_ctx.fillStyle = mainWaveColor.lineColor;
+        this.mainWave_ctx.strokeStyle = mainWaveColor.lineColor;
+        this.mainWave_ctx.lineJoin = "round";
         this.progressWave_ctx.fillStyle = progressWaveColor.lineColor;
     }
 

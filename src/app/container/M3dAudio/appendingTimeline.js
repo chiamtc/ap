@@ -1,6 +1,8 @@
 import style from "./util/Style";
 import {subjects} from "./M3dAudio";
 
+
+//ABSOLUTELY not using this atm
 class WaveTimeline {
     constructor(params, m3dAudio) {
         this.m3dAudio = m3dAudio;
@@ -28,7 +30,6 @@ class WaveTimeline {
 
         this.displayInterval = params.displayInterval;
         this.strideWidth = params.strideWidth || 1;
-        this.clipping = true; //TODO: expose to params
     }
 
     /*
@@ -50,11 +51,11 @@ class WaveTimeline {
                 this.redrawTimeline();
                 const scrolbarHeight = this.m3dAudio.wave_wrapper.height - this.m3dAudio.wave_wrapper.progressWave_wrapper.scrollHeight;
                 if (this.direction === 'bottom') {
-                    scrolbarHeight !== 0 ? style(this.container, {top: `-${this.height + scrolbarHeight}px`}) : style(this.container, {top: `-${this.height}px`})
+                    scrolbarHeight !== 0 ? style(this.container, {top: `${this.m3dAudio.wave_wrapper.height - this.height - scrolbarHeight - 2}px`}) : style(this.container, {top: `${this.m3dAudio.wave_wrapper.height - this.height}px`})
                 }
             }
         });
-        this.m3dAudio.wave_wrapper.mainWave_wrapper.addEventListener('scroll', this.onScroll);
+        this.m3dAudio.wave_wrapper.progressWave_wrapper.addEventListener('scroll', this.onScroll);
         subjects.waveWrapper_state.subscribe((res) => {
             this.clearTimeline();
             this.redrawTimeline();
@@ -83,6 +84,7 @@ class WaveTimeline {
         const container = document.querySelector(this.container_id);
         if (!container) throw new Error("No container element id found. Pass container id as a string.");
         else this.container = container;
+        this.m3dAudio.wave_wrapper.mainWave_wrapper.appendChild(this.container); //append onto mainWave ?
     }
 
     createWrapper() {
@@ -92,23 +94,16 @@ class WaveTimeline {
             //styling
             style(this.container, {
                 display: 'block',
-                position: 'relative',//this.direction === 'top' ? 'absolute' : 'relative', //absolute for top timeline display to clip and goes for bottom
+                position: 'absolute',//this.direction === 'top' ? 'absolute' : 'relative', //absolute for top timeline display to clip and goes for bottom
+                top: this.direction === 'top' ? 0 : `${this.m3dAudio.wave_wrapper.height - this.height}px`,
                 height: `${this.height}px`,
-                width: '100%',
+                width:'100%',
+                zIndex: 6
             });
-
-            switch (this.direction) {
-                case 'top':
-                    style(this.container, {top: `${this.height}px`});
-                    break;
-                case 'bottom':
-                    style(this.container, {top: `-${this.height}px`});
-                    break;
-            }
 
             style(this.wrapper, {
                 display: 'block',
-                position: 'relative',//'relative',
+                position: 'absolute',//'relative',
                 height: `${this.height}px`,
             });
         }
@@ -133,7 +128,7 @@ class WaveTimeline {
         canvasEle.height = (this.height + 1) * this.pixelRatio;
         style(this.timelineCanvas, {
             position: 'absolute',
-            zIndex: 4,
+            zIndex: 6,
             width: `${canvasWidth}px`,
             left: 0
         });

@@ -73,7 +73,7 @@ class AudioPlayer extends Component {
             responsive: true, //will expand the width, causes re-calculate of peak
             mainWaveStyle: {
                 backgroundColor: 'transparent',
-                lineColor: 'rgb(40, 170, 226)'
+                lineColor: 'rgb(40, 170, 226, 0.5)'
             },
             progressWaveStyle: {
                 backgroundColor: 'rgba(40, 170, 226,0.1)'
@@ -83,6 +83,13 @@ class AudioPlayer extends Component {
                 borderRightColor: 'red'
             },
             plugins: [
+                {
+                    type:'spectrogram',
+                    params:{
+                        container_id : '#waveform-spectrogram',
+                        fftSamples:1024,
+                    }
+                },
                 {
                     type: 'timeline',
                     params: {
@@ -100,13 +107,15 @@ class AudioPlayer extends Component {
                         direction: 'bottom',
                         displayInterval: true
                     }
-                }]
+                },
+              ]
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => {
             this.setState({status: res});
         });
+
     }
 
     play = () => {
@@ -174,10 +183,12 @@ class AudioPlayer extends Component {
                 <p>minpxpersec: {this.state.zoomLevel}</p>
             </div>
             <hr/>
+            <h1>some random</h1>
             {/*<div style={{width:'600px', overflow:'auto'}}>*/}
             <div>
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
+                <div id="waveform-spectrogram"/>
                 <div id="waveform-timeline-bottom"/>
             </div>
         </div>

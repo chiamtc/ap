@@ -298,7 +298,7 @@ export default class WaveWrapper {
         const wrapper = document.createElement('progresswave');
         style(wrapper, {
             position: 'absolute',
-            zIndex: 3,
+            zIndex: 1,
             left: 0,
             top: 0,
             bottom: 0,
