@@ -108,7 +108,10 @@ class AudioPlayer extends Component {
                         container_id: '#waveform-timeline-top',
                         interval: 5,
                         direction: 'top',
-                        displayInterval: false
+                        displayInterval: false,
+                    /*    fontColor:'#000000',
+                        fontFamily: `"Times New Roman", Times, serif`,
+                        fontSize: 12*/
                     }
                 },
                 {
@@ -117,7 +120,11 @@ class AudioPlayer extends Component {
                         container_id: '#waveform-timeline-bottom',
                         interval: 5,
                         direction: 'bottom',
-                        displayInterval: true
+                        displayInterval: true,
+                        fontColor:'#000',
+                       /* fontWeight:800,
+                        fontFamily: `"Times New Roman", Times, serif`,
+                        fontSize: 12*/
                     }
                 },
             ]

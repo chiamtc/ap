@@ -19,6 +19,8 @@ class WaveTimeline {
         this.width = 0;
         this.fontFamily = params.fontFamily || 'Arial';
         this.fontSize = params.fontSize || 10;
+        this.fontColor = params.fontColor || '#000000';
+        this.fontWeight = params.fontWeight || 500;
         this.duration = null; //audio duration
         this.maxCanvasWidth = m3dAudio.wave_wrapper.maxCanvasWidth || 4000; //using parent's maxcanvaswidth or 4k as default
         this.maxCanvasElementWidth = 0; //using parent's maxcanvaswidth or 4k as default
@@ -146,7 +148,9 @@ class WaveTimeline {
     }
 
     setCanvasStyle() {
+        this.setFontColor(this.fontColor);
         this.setFonts(this.fontSize, this.fontFamily);
+        this.setFontWeight(this.fontWeight);
     }
 
     //TODO: make a new generic document/window event and extends from it
@@ -155,6 +159,7 @@ class WaveTimeline {
 
 
     renderTimeline() {
+        this.setCanvasStyle();
         const duration = this.m3dAudio.web_audio.getDuration(); //total duration of the audio
         const width = this.fill && !this.scroll ? this.drawer.getContainerWidth() : this.drawer.getWidth();// : this.drawer.scrollWidth * this.pixelRatio;
         const primaryInterval = this.primaryInterval; //dynamic
@@ -207,7 +212,17 @@ class WaveTimeline {
 
     setFonts(fontSize, fontFamily) {
         //not working :(
-        this.timelineCanvas.getContext('2d').font = `${fontSize}px ${fontFamily}`;
+        // this.timelineCanvas.getContext('2d').font = `${fontSize}px ${fontFamily}`;
+        this.timelineCtx.font = `${fontSize}px ${fontFamily}`;
+    }
+
+    setFontWeight(fontWeight){
+        console.log(`${fontWeight} ${this.fontSize}px ${this.fontFamily}`);
+        this.timelineCtx.font = `${fontWeight} ${this.fontSize}px ${this.fontFamily}`;
+    }
+
+    setFontColor(fontColor){
+        this.timelineCtx.fillStyle = fontColor;
     }
 }
 
