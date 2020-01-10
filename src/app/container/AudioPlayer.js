@@ -88,11 +88,10 @@ class AudioPlayer extends Component {
                     params: {
                         container_id: '#waveform-spectrogram',
                         fftSamples: 2048,
-                        windowFunc: 'hamming',
-                        noverlap: 1280
+                        windowFunc: 'hamming'
                     }
                 },
-                {
+               /* {
                     type: 'timeline',
                     params: {
                         container_id: '#waveform-timeline-top',
@@ -109,7 +108,7 @@ class AudioPlayer extends Component {
                         direction: 'bottom',
                         displayInterval: true
                     }
-                },
+                },*/
             ]
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);

@@ -11,7 +11,7 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
     this.peakBand = 0;
     this.peak = 0;
 
-    var i;
+    let i;
     switch (windowFunc) {
         case 'bartlett':
             for (i = 0; i < bufferSize; i++) {
@@ -96,9 +96,9 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             throw Error('No such window function \'' + windowFunc + '\'');
     }
 
-    var limit = 1;
-    var bit = bufferSize >> 1;
-    var i;
+    let limit = 1;
+    let bit = bufferSize >> 1;
+    // let i;
 
     while (limit < bufferSize) {
         for (i = 0; i < limit; i++) {
@@ -116,7 +116,7 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
 
     this.calculateSpectrum = function (buffer) {
         // Locally scope variables for speed up
-        var bufferSize = this.bufferSize,
+        let bufferSize = this.bufferSize,
             cosTable = this.cosTable,
             sinTable = this.sinTable,
             reverseTable = this.reverseTable,
@@ -129,7 +129,7 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             mag,
             spectrum = new Float32Array(bufferSize / 2);
 
-        var k = Math.floor(Math.log(bufferSize) / Math.LN2);
+        const k = Math.floor(Math.log(bufferSize) / Math.LN2);
         if (Math.pow(2, k) !== bufferSize) {
             throw 'Invalid buffer size, must be a power of 2.';
         }
@@ -150,7 +150,7 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             ti,
             tmpReal;
 
-        for (var i = 0; i < bufferSize; i++) {
+        for (let i = 0; i < bufferSize; i++) {
             real[i] =
                 buffer[reverseTable[i]] * this.windowValues[reverseTable[i]];
             imag[i] = 0;
@@ -163,8 +163,8 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             currentPhaseShiftReal = 1;
             currentPhaseShiftImag = 0;
 
-            for (var fftStep = 0; fftStep < halfSize; fftStep++) {
-                var i = fftStep;
+            for (let fftStep = 0; fftStep < halfSize; fftStep++) {
+                let i = fftStep;
 
                 while (i < bufferSize) {
                     off = i + halfSize;
@@ -184,18 +184,14 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
                 }
 
                 tmpReal = currentPhaseShiftReal;
-                currentPhaseShiftReal =
-                    tmpReal * phaseShiftStepReal -
-                    currentPhaseShiftImag * phaseShiftStepImag;
-                currentPhaseShiftImag =
-                    tmpReal * phaseShiftStepImag +
-                    currentPhaseShiftImag * phaseShiftStepReal;
+                currentPhaseShiftReal = tmpReal * phaseShiftStepReal - currentPhaseShiftImag * phaseShiftStepImag;
+                currentPhaseShiftImag = tmpReal * phaseShiftStepImag + currentPhaseShiftImag * phaseShiftStepReal;
             }
 
             halfSize = halfSize << 1;
         }
 
-        for (var i = 0, N = bufferSize / 2; i < N; i++) {
+        for (let i = 0, N = bufferSize / 2; i < N; i++) {
             rval = real[i];
             ival = imag[i];
             mag = bSi * sqrt(rval * rval + ival * ival);
@@ -265,6 +261,10 @@ class Spectrogram {
         this.maxCanvasElementWidth =
             this.drawer.maxCanvasElementWidth ||
             Math.round(this.maxCanvasWidth / this.pixelRatio);
+        this.fill = true;
+        this.scroll = true;
+        this.drawer = null; //aka wrapper;
+        this.web_audio = null; //aka web_audio
 
         //TODO
         // drawer.wrapper.addEventListener('scroll', this._onScroll);
@@ -272,13 +272,19 @@ class Spectrogram {
     }
 
     init() {
+        this.setM3dAudioState();
         this.createContainer(); //comment it out for <spectrogram> tag instead of <div> <spectrogram> </div>
         this.createWrapper();
         this.createCanvas();
         this.renderSpectrogram();
     }
 
-    //TODO setM3dAudioState()
+    setM3dAudioState(){
+        this.drawer = this.m3dAudio.wave_wrapper;
+        this.web_audio = this.m3dAudio.web_audio;
+        this.fill = this.m3dAudio.fill;
+        this.scroll = this.m3dAudio.scroll;
+    }
 
 
     createContainer() {
@@ -308,7 +314,7 @@ class Spectrogram {
                 height: `${this.height}px`
             });
 
-            if (this.m3dAudio.fill || this.m3dAudio.scroll) {
+            if (this.fill || this.scroll) {
                 style(this.wrapper, {
                     width: '100%',
                     overflowX: 'hidden',
@@ -333,13 +339,11 @@ class Spectrogram {
     }
 
     renderSpectrogram() {
-        const canvasWidth = this.m3dAudio.wave_wrapper.mainWave_wrapper.scrollWidth - this.maxCanvasElementWidth * 0;
+        const canvasWidth = this.drawer.mainWave_wrapper.scrollWidth - this.maxCanvasElementWidth * 0;
         this.spectrogramCanvas.width = canvasWidth * this.pixelRatio;
         this.spectrogramCanvas.height = (this.height + 1) * this.pixelRatio;
         this.spectrogramCanvas.style.width = canvasWidth;
-        this.width = this.m3dAudio.wave_wrapper.width;
-        console.log(this.m3dAudio)
-        console.log(this.m3dAudio.wave_wrapper.width, this.width);
+        this.width = this.drawer.width;
         // width: `${canvasWidth}px`,
         // this.spectrogramCtx.fillStyle = 'green';
         // this.spectrogramCtx.fillRect(0, this.height - 20, 20, 20);
@@ -352,7 +356,7 @@ class Spectrogram {
 
     getFrequencies(cb) {
         const fftSamples = this.fftSamples;
-        const buffer = (this.buffer = this.m3dAudio.web_audio.filteredBuffer);
+        const buffer = (this.buffer = this.web_audio.filteredBuffer);
         const channelOne = buffer.getChannelData(0);
         const bufferLength = buffer.length;
         const sampleRate = buffer.sampleRate;
@@ -367,7 +371,7 @@ class Spectrogram {
             const uniqueSamplesPerPx = buffer.length / this.spectrogramCanvas.width;
             noverlap = Math.max(0, Math.round(fftSamples - uniqueSamplesPerPx));
         }
-        const fft = new FFT(fftSamples, sampleRate, this.windowFunc, this.alpha);
+        const fft = new FFT(fftSamples, sampleRate / 6, this.windowFunc, this.alpha);
         let currentOffset = 0;
 
         while (currentOffset + fftSamples < channelOne.length) {
@@ -393,7 +397,7 @@ class Spectrogram {
 
     drawSpectrogram(frequenciesData, my) {
         const spectrCc = my.spectrogramCtx;
-        const length = my.m3dAudio.web_audio.getDuration();
+        const length = my.web_audio.getDuration();
         const height = my.height;
         const pixels = my.resample(frequenciesData);
         const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
@@ -403,40 +407,22 @@ class Spectrogram {
             for (j = 0; j < pixels[i].length; j++) {
                 // const colorMap = my.colorMap[pixels[i][j]];
                 my.spectrogramCtx.beginPath();
-                // my.spectrCc.rect()
-                my.spectrogramCtx.fillStyle =
-                /*  'rgba(' +
-                  colorMap[0] * 256 +
-                  ', ' +
-                  colorMap[1] * 256 +
-                  ', ' +
-                  colorMap[2] * 256 +
-                  ',' +
-                  colorMap[3] +
-                  ')';*/
-
-                colours(pixels[i][j] * 100).hex();
-                // pixels[i][j];
-                my.spectrogramCtx.fillRect(
-                    i,
-                    height - j * heightFactor,
-                    1,
-                    heightFactor
-                );
+                my.spectrogramCtx.fillStyle = pixels[i][j];
+                my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
+                my.spectrogramCtx.fill();
+                // my.spectrogramCtx.stroke();
             }
         }
     }
 
 
     resample(oldMatrix) {
-
         const columnsNumber = this.width;
         const newMatrix = [];
 
         const oldPiece = 1 / oldMatrix.length;
         const newPiece = 1 / columnsNumber;
         let i;
-
         for (i = 0; i < columnsNumber; i++) {
             const column = new Array(oldMatrix[0].length);
             let j;
@@ -467,14 +453,22 @@ class Spectrogram {
 
             for (m = 0; m < oldMatrix[0].length; m++) {
                 intColumn[m] = column[m];
-                // colorColumn[m] = colours(column[m]* 200).hex();
+                colorColumn[m] = colours(column[m] * 100).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
             }
-            // newMatrix.push(colorColumn);
-            newMatrix.push(intColumn);
+            newMatrix.push(colorColumn);
         }
         return newMatrix;
     }
-
 }
+
+/**
+ * Note:
+ * 1. performance on drawing is significantly faster if I use hex() on colorColumn[m] (new array) and pushes to newMatrix[] rather than process it in drawSpectrogram's 2nd for loop (first loop length =600[width of canvas] and second loop = fftSamples/2)
+ * 2. performance for fft itself.
+ * TODO 1. wasm  (doable but not deplo-able)
+ *      2. web-worker (doable)
+ *      3. find even faster fft algo in dsp.js
+ *      4.
+ */
 
 export default Spectrogram;

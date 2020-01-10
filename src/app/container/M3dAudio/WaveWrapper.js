@@ -64,7 +64,7 @@ export default class WaveWrapper {
             display: 'block',
             position: 'relative',
             height: `${this.height}px`,
-            zIndex:99
+            zIndex: 99
         });
         if (this.fill || this.scroll) {
             style(wrapper, {
@@ -118,14 +118,14 @@ export default class WaveWrapper {
         } else {
             progress = (clientX - bbox.left + this.mainWave_wrapper.scrollLeft) / this.mainWave_wrapper.scrollWidth || 0;
         }
-        subjects.waveWrapper_state.next({type: e.type, value:progress});
+        subjects.waveWrapper_state.next({type: e.type, value: progress});
     }
 
     getContainerWidth() {
         return Math.round(this.container.clientWidth * this.pixelRatio);
     }
 
-    getWidth(){
+    getWidth() {
         return this.width;
     }
 
@@ -283,7 +283,7 @@ export default class WaveWrapper {
         const elementWidth = Math.round(this.width / this.pixelRatio);
         const totalWidth = Math.round(this.width / this.pixelRatio); //TODO: this.width not this.getWidth()
         this.wave_canvas.updateDimensions(elementWidth, totalWidth, this.width, this.height);
-        style(this.progressWave_wrapper, {display:'block'});
+        style(this.progressWave_wrapper, {display: 'block'});
     }
 
     addCursor() {
