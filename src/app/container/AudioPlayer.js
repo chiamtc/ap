@@ -61,13 +61,9 @@ class AudioPlayer extends Component {
            */
         const m3dAudio = new M3dAudio();
 
-        const colours2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
-        const colours3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
-        const colors = Chroma.scale([
-            '#ffffff',
-            '#ffa500',
-            '#ff0000',
-        ]);
+        const colors = Chroma.scale(['#ffffff', '#ffa500', '#ff0000']);
+        const colors2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
+        const colors3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
         m3dAudio.create({
             container_id: '#waveform-container',
             filters: this.props.filters,
@@ -96,9 +92,9 @@ class AudioPlayer extends Component {
                     type: 'spectrogram',
                     params: {
                         container_id: '#waveform-spectrogram',
-                        fftSamples: 1024,
+                        fftSamples: 512,
                         windowFunc: 'hamming',
-                        spectrumGain: 500,
+                        spectrumGain: 200,
                         colorMap: colors
                     }
                 },
