@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import M3dAudio from './M3dAudio/M3dAudio';
 import {subjects} from './M3dAudio/M3dAudio';
-import style from "./M3dAudio/util/Style";
 import {
     PREPARING,
     UNREADY,
@@ -14,7 +13,7 @@ import {
     FINISHED
 } from "./M3dAudio/constants";
 import PropTypes from 'prop-types';
-
+let Chroma = require('chroma-js')
 class AudioPlayer extends Component {
     constructor(props) {
         super(props);
@@ -23,8 +22,8 @@ class AudioPlayer extends Component {
             percent: 0,
             m3dAudio: null,
             gain: 1,
-            status: 'unready',
-            filterId: 'F1',
+            status: UNREADY,
+            filterId: 'F1', //default
             zoomLevel: 20
         }
     }
@@ -59,6 +58,9 @@ class AudioPlayer extends Component {
 
          */
         const m3dAudio = new M3dAudio();
+
+        const colours2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
+        const colours3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
         m3dAudio.create({
             container_id: '#waveform-container',
             filters: this.props.filters,
@@ -87,11 +89,12 @@ class AudioPlayer extends Component {
                     type: 'spectrogram',
                     params: {
                         container_id: '#waveform-spectrogram',
-                        fftSamples: 2048,
-                        windowFunc: 'hamming'
+                        fftSamples: 1024,
+                        windowFunc: 'hamming',
+                        spectrumGain:250
                     }
                 },
-               /* {
+                {
                     type: 'timeline',
                     params: {
                         container_id: '#waveform-timeline-top',
@@ -108,7 +111,7 @@ class AudioPlayer extends Component {
                         direction: 'bottom',
                         displayInterval: true
                     }
-                },*/
+                },
             ]
         }); //change this to this.props.filterId
         await m3dAudio.load(this.props.url);
@@ -117,6 +120,11 @@ class AudioPlayer extends Component {
             this.setState({status: res});
         });
 
+    }
+
+    zoomViaButton = ()=>{
+        this.state.m3dAudio.zoom(200);
+        this.setState({zoomLevel:200})
     }
 
     play = () => {
@@ -171,6 +179,7 @@ class AudioPlayer extends Component {
             </select>
             <button disabled={this.state.status === 'unready'} onClick={this.play}>{this.renderStatus()}</button>
 
+
             <p>play time: {this.state.time} s</p>
             <p>played percentage: {this.state.percent} % </p>
             <hr/>
@@ -182,6 +191,7 @@ class AudioPlayer extends Component {
             <div>
                 Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
+                <button disabled={this.state.status === 'unready'} onClick={this.zoomViaButton}>Zoom 200</button>
             </div>
             <hr/>
             {/*<h1>some random txt</h1>*/}

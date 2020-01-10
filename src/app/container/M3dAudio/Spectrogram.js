@@ -1,3 +1,5 @@
+import {subjects} from "./M3dAudio";
+
 export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
     this.bufferSize = bufferSize;
     this.sampleRate = sampleRate;
@@ -223,6 +225,7 @@ export const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
  */
 
 import style from "./util/Style";
+import {CHANGE_FILTER, ZOOM} from "./constants";
 
 let Chroma = require("chroma-js");
 
@@ -233,11 +236,10 @@ const colours = Chroma.scale([
     '#ff0000',
     '#ff0000',
 ]);
-const colours2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']); //
-const colours3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
 //TODO: read
 // https://dsp.stackexchange.com/questions/42428/understanding-overlapping-in-stft
 // https://dsp.stackexchange.com/questions/47448/window-periodoverlap-and-fft
+// OG fft + spectrogram code https://developer.mozilla.org/en-US/docs/Archive/Misc_top_level/Visualizing_Audio_Spectrum
 class Spectrogram {
     constructor(params, m3dAudio) {
         this.m3dAudio = m3dAudio;
@@ -245,10 +247,10 @@ class Spectrogram {
         this.container_id = params.container_id;
         this.container = null;
         this.wrapper = null;
-
+        this.colorMap = params.colorMap || colours;
         this.spectrogramCanvas = null;
         this.spectrogramCtx = null;
-
+        this.spectrumGain = params.spectrumGain || 100;
         this.drawer = m3dAudio.wave_wrapper;
         this.pixelRatio = m3dAudio.wave_wrapper.pixelRatio;
         this.fftSamples = params.fftSamples || 512;
@@ -269,6 +271,8 @@ class Spectrogram {
         //TODO
         // drawer.wrapper.addEventListener('scroll', this._onScroll);
         // ws.on('redraw')
+        //scroll event, + scrollLeft on wrapper
+        //zoom event, -top px depending on the scrollHeight
     }
 
     init() {
@@ -277,9 +281,22 @@ class Spectrogram {
         this.createWrapper();
         this.createCanvas();
         this.renderSpectrogram();
+        subjects.m3dAudio_control.subscribe((res) => {
+            //TODO export constants
+            switch (res.type) {
+                case CHANGE_FILTER:
+                    this.clearCanvas();
+                    this.renderSpectrogram();
+                    break;
+                case ZOOM:
+                    this.clearCanvas();
+                    this.renderSpectrogram();
+                    break;
+            }
+        })
     }
 
-    setM3dAudioState(){
+    setM3dAudioState() {
         this.drawer = this.m3dAudio.wave_wrapper;
         this.web_audio = this.m3dAudio.web_audio;
         this.fill = this.m3dAudio.fill;
@@ -344,13 +361,7 @@ class Spectrogram {
         this.spectrogramCanvas.height = (this.height + 1) * this.pixelRatio;
         this.spectrogramCanvas.style.width = canvasWidth;
         this.width = this.drawer.width;
-        // width: `${canvasWidth}px`,
-        // this.spectrogramCtx.fillStyle = 'green';
-        // this.spectrogramCtx.fillRect(0, this.height - 20, 20, 20);
-        // this.spectrogramCtx.beginPath();       // Start a new path
-        // this.spectrogramCtx.moveTo(0, this.height-5);    // Move the pen to (30, 50)
-        // this.spectrogramCtx.lineTo(150, this.height-5);  // Draw a line to (150, 100)
-        // this.spectrogramCtx.stroke();
+        //TODO add loadFrequenciesData by fetching them via url ?
         this.getFrequencies(this.drawSpectrogram);
     }
 
@@ -453,11 +464,15 @@ class Spectrogram {
 
             for (m = 0; m < oldMatrix[0].length; m++) {
                 intColumn[m] = column[m];
-                colorColumn[m] = colours(column[m] * 100).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
+                colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
             }
             newMatrix.push(colorColumn);
         }
         return newMatrix;
+    }
+
+    clearCanvas() {
+        this.spectrogramCtx.clearRect(0, 0, this.spectrogramCtx.canvas.width, this.spectrogramCtx.canvas.height);
     }
 }
 

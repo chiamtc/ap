@@ -1,5 +1,7 @@
 import style from "./util/Style";
 import {subjects} from "./M3dAudio";
+import {ZOOM} from "./constants";
+
 
 class WaveTimeline {
     constructor(params, m3dAudio) {
@@ -23,12 +25,11 @@ class WaveTimeline {
         this.fill = true;
         this.scroll = true;
         this.drawer = null; //aka wrapper;
-        this.direction = params.direction || 'bottom';
+        this.direction = params.direction || 'bottom'; //export this to const?
         this.primaryInterval = params.interval || 5;
 
         this.displayInterval = params.displayInterval;
         this.strideWidth = params.strideWidth || 1;
-        this.clipping = true; //TODO: expose to params
     }
 
     /*
@@ -44,7 +45,7 @@ class WaveTimeline {
         this.setM3dAudioState();
         this.redrawTimeline();
         subjects.m3dAudio_control.subscribe((event) => {
-            if (event.type === 'zoom') {
+            if (event.type === ZOOM) {
                 this.scroll = event.value.scroll;
                 this.clearTimeline();
                 this.redrawTimeline();

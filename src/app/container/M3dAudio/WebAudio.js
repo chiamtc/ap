@@ -59,6 +59,7 @@ class WebAudio {
 
         //Audio Effects Filters
         this.gainNode = null; //GainNode
+        this.compressorNode = null; //CompressorNode
 
         //Audio processing
         this.scriptNode = null; //AudioScriptProcessor
@@ -91,6 +92,7 @@ class WebAudio {
     }
 
     init() {
+        // this.createCompressorNode();
         this.createGainNode();
         this.createScriptNode();
         this.setState(PAUSED);
@@ -151,9 +153,12 @@ class WebAudio {
         this.source = this.audioContext.createBufferSource();
         // TODO : add this.source.connect(xxNode) //xxNode = audio effects filter. refs:https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
         //start end effects filter
+        // this.source.connect(this.compressorNode);
+        // this.compressorNode.connect(this.gainNode);
         //end effects filter
 
         //final step
+        // this.gainNode.connect(this.audioContext.destination); //has to connect
         this.source.connect(this.audioContext.destination); //has to connect
     }
 
@@ -165,10 +170,20 @@ class WebAudio {
         this.scriptNode.connect(this.audioContext.destination);
     }
 
+    createCompressorNode(){
+        const compressor = this.audioContext.createDynamicsCompressor();
+        compressor.threshold.value = -50;
+        compressor.knee.value = 40;
+        compressor.ratio.value = 100;
+        compressor.attack.value = 0;
+        compressor.release.value = 0.25;
+        this.compressorNode = compressor;
+    }
 
     createGainNode() {
         if (this.audioContext.createGain) this.gainNode = this.audioContext.createGain();
         else this.gainNode = this.audioContext.createGainNode();
+        // this.compressorNode.connect(this.gainNode)
         this.gainNode.connect(this.audioContext.destination);
     }
 

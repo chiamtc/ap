@@ -13,7 +13,7 @@ class Home extends Component {
 
     render() {
         return <AudioPlayer url='https://firebasestorage.googleapis.com/v0/b/podstetheedata.appspot.com/o/human_samples%2F-LvrfS3FUwxCIH8_3uT3.wav?alt=media&token=24d4a22a-793f-4d10-b2cb-3345e188fb6b'
-        filters={listOfFilter} filterId='F7'/>
+        filters={listOfFilter} filterId='F0'/>
     }
 }
 

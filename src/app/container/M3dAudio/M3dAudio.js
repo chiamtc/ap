@@ -7,6 +7,7 @@ import WaveTimeline from "./WaveTimeline";
 import {debounceTime} from 'rxjs/operators'
 import {fromEvent} from 'rxjs';
 import Spectrogram from "./Spectrogram";
+import {READY, CLICK, RESIZE, UNREADY, TIMELINE, SPECTROGRAM, ZOOM, PLAYING, CHANGE_FILTER} from "./constants";
 
 export const subjects = {
     /**
@@ -71,7 +72,7 @@ class M3dAudio {
         this.filters = null;
         this.filterId = null;
         this.selectedFilter = null; //new filter selected by user
-        this.web_audio_state = 'unready'; //default
+        this.web_audio_state = UNREADY; //default
         this.fill = true;
         this.scroll = false;
         this.minPxPerSec = 20; //for zoom
@@ -129,7 +130,7 @@ class M3dAudio {
     initListeners() {
         subjects.webAudio_state.subscribe((i) => {
             this.web_audio_state = i;
-            if (i === 'ready') { //make it to switch statement if there's other mechanism other than 'ready'
+            if (i === READY) { //make it to switch statement if there's other mechanism other than 'ready'
                 setTimeout(()=> this.createPlugins(), 0); //create plugin when webaudiostate is ready;
             }
             subjects.m3dAudio_state.next(i);
@@ -141,23 +142,23 @@ class M3dAudio {
 
         subjects.waveWrapper_state.subscribe((i) => {
             switch (i.type) {
-                case 'click':
+                case CLICK:
                     this.seekTo(i.value);
                     break;
-                case 'resize':
+                case RESIZE:
                     this.redraw();
                     break;
             }
         });
 
         if (this.responsive) {
-            fromEvent(window, 'resize').pipe(debounceTime(200))
+            fromEvent(window, RESIZE).pipe(debounceTime(200))
                 .subscribe((e) => {
                     if (this.previousWidth !== this.wave_wrapper.mainWave_wrapper.clientWidth) {
                         if (this.wave_wrapper.mainWave_wrapper.clientWidth >= 300) {
                             this.previousWidth = this.wave_wrapper.mainWave_wrapper.clientWidth;
                             subjects.waveWrapper_state.next({
-                                type: 'resize',
+                                type: RESIZE,
                                 value: {width: this.wave_wrapper.mainWave_wrapper.clientWidth}
                             })
                         } else {
@@ -172,11 +173,11 @@ class M3dAudio {
     createPlugins() {
         this.plugins.map((plugin) => {
             switch (plugin.type) {
-                case 'timeline':
+                case TIMELINE:
                     const t = new WaveTimeline(plugin.params, this);
                     t.init();
                     break;
-                case 'spectrogram':
+                case SPECTROGRAM:
                     const p = new Spectrogram(plugin.params, this);
                     p.init();
                     break;
@@ -207,7 +208,7 @@ class M3dAudio {
     }
 
     changeFilter(newFilterId) {
-        if (this.web_audio_state === 'playing') {
+        if (this.web_audio_state === PLAYING) {
             this.web_audio.pause();
         }
         if (newFilterId !== this.selectedFilter) {
@@ -215,6 +216,8 @@ class M3dAudio {
             this.web_audio.applyFilter(newCoef);
             this.selectedFilter = newFilterId;
             this.drawBuffer();
+            console.log('filter changed');
+            subjects.m3dAudio_control.next({type: CHANGE_FILTER, value: {}})
         }
     }
 
@@ -257,7 +260,7 @@ class M3dAudio {
          */
         this.wave_wrapper.setWidth(width);
         // this.wave_canvas.clearWave(); //always clear wave before drawing, not so efficient. Used to apply it, i commented it out to see the performance differences as of date 07/01/2020
-        // this.wave_wrapper.drawWave(peaks, 0, start, end);
+        this.wave_wrapper.drawWave(peaks, 0, start, end);
     }
 
     playPause() {
@@ -314,7 +317,7 @@ class M3dAudio {
         }
         this.redraw();
         this.wave_wrapper.recenter(this.getCurrentTime() / this.getDuration());
-        subjects.m3dAudio_control.next({type: 'zoom', value: {scroll: true}})
+        subjects.m3dAudio_control.next({type: ZOOM, value: {scroll: true}})
     }
 
     seekTo(seekToTime) {
