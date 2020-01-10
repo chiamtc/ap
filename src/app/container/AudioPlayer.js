@@ -61,6 +61,13 @@ class AudioPlayer extends Component {
 
         const colours2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
         const colours3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
+        const colors = Chroma.scale([
+            '#ffffff',
+            '#ffa500',
+            '#ff0000',
+            '#ff0000',
+            '#ff0000',
+        ]);
         m3dAudio.create({
             container_id: '#waveform-container',
             filters: this.props.filters,
@@ -91,7 +98,8 @@ class AudioPlayer extends Component {
                         container_id: '#waveform-spectrogram',
                         fftSamples: 1024,
                         windowFunc: 'hamming',
-                        spectrumGain:250
+                        spectrumGain:250,
+                        colorMap: colors
                     }
                 },
                 {
@@ -119,13 +127,12 @@ class AudioPlayer extends Component {
         subjects.m3dAudio_state.subscribe((res) => {
             this.setState({status: res});
         });
-
     }
 
-    zoomViaButton = ()=>{
-        this.state.m3dAudio.zoom(200);
-        this.setState({zoomLevel:200})
-    }
+    zoomViaButton = (level)=>{
+        this.state.m3dAudio.zoom(level);
+        this.setState({zoomLevel:level})
+    };
 
     play = () => {
         this.state.m3dAudio.playPause();
@@ -170,7 +177,7 @@ class AudioPlayer extends Component {
     zoom = (e) => {
         this.state.m3dAudio.zoom(e.target.value);
         this.setState({zoomLevel: e.target.value});
-    }
+    };
 
     render() {
         return <div style={{margin: '2em'}}>
@@ -189,9 +196,14 @@ class AudioPlayer extends Component {
             </div>
             <hr/>
             <div>
-                Zoom level: <input type="range" min="20" max="200" defaultValue={20} onChange={this.zoom}/>
+                Zoom level: <input type="range" min="20" max="200" step={30} defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
-                <button disabled={this.state.status === 'unready'} onClick={this.zoomViaButton}>Zoom 200</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(50)}>Zoom 50</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(80)}>Zoom 80</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(110)}>Zoom 110</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(140)}>Zoom 140</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(170)}>Zoom 170</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(200)}>Zoom 200</button>
             </div>
             <hr/>
             {/*<h1>some random txt</h1>*/}

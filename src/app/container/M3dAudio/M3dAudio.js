@@ -304,6 +304,7 @@ class M3dAudio {
     }
 
     zoom(level) {
+        console.log('level',level)
         if (!level) {
             // this.minPxPerSec = this.minPxPerSec;
             this.scroll = false;
