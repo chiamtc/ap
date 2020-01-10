@@ -8,7 +8,6 @@ import {debounceTime} from 'rxjs/operators'
 import {fromEvent} from 'rxjs';
 import Spectrogram from "./Spectrogram";
 import {READY, CLICK, RESIZE, UNREADY, TIMELINE, SPECTROGRAM, ZOOM, PLAYING, CHANGE_FILTER} from "./constants";
-
 export const subjects = {
     /**
      * @title m3dAudio_state

@@ -13,7 +13,10 @@ import {
     FINISHED
 } from "./M3dAudio/constants";
 import PropTypes from 'prop-types';
-let Chroma = require('chroma-js')
+let Chroma = require('chroma-js');
+
+import RFFT from "./M3dAudio/util/RFFT";
+
 class AudioPlayer extends Component {
     constructor(props) {
         super(props);
@@ -29,6 +32,8 @@ class AudioPlayer extends Component {
     }
 
     async componentDidMount() {
+        // const rfft = new RFFT(512, 48000);
+        // rfft.calculateSpectrum()
         /*
         Wavesurfer.js
             1. createDrawer() -> drawer.multicanvas.js extends drawer.js ->
@@ -98,7 +103,7 @@ class AudioPlayer extends Component {
                         container_id: '#waveform-spectrogram',
                         fftSamples: 1024,
                         windowFunc: 'hamming',
-                        spectrumGain:250,
+                        spectrumGain:100,
                         colorMap: colors
                     }
                 },

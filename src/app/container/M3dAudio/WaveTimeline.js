@@ -217,7 +217,6 @@ class WaveTimeline {
     }
 
     setFontWeight(fontWeight){
-        console.log(`${fontWeight} ${this.fontSize}px ${this.fontFamily}`);
         this.timelineCtx.font = `${fontWeight} ${this.fontSize}px ${this.fontFamily}`;
     }
 
