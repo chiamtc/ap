@@ -17,7 +17,7 @@ import FFT from "./util/FFT";
  */
 
 import style from "./util/Style";
-import {CHANGE_FILTER, ZOOM} from "./constants";
+import {CHANGE_FILTER, CLICK, RESIZE, ZOOM} from "./constants";
 
 //TODO: read
 // https://dsp.stackexchange.com/questions/42428/understanding-overlapping-in-stft
@@ -30,10 +30,10 @@ class Spectrogram {
         this.container_id = params.container_id;
         this.container = null;
         this.wrapper = null;
-        if(!params.colorMap){
+        if (!params.colorMap) {
             throw new Error('No colorMap parameter found.')
-        }else{
-            if(!Object.prototype.hasOwnProperty.call(params.colorMap,'classes')){
+        } else {
+            if (!Object.prototype.hasOwnProperty.call(params.colorMap, 'classes')) {
                 throw new Error(`"colorMap" parameter is not a class of Chroma-JS.\n
                 1. "npm install --save chroma-js" \n
                 2. create "colorMap" parameter using "scale()". Reference: https://gka.github.io/chroma.js/#color-scales`)
@@ -60,11 +60,12 @@ class Spectrogram {
         this.drawer = null; //aka wrapper;
         this.web_audio = null; //aka web_audio
 
-        //TODO
+        //TODO status - done
         // drawer.wrapper.addEventListener('scroll', this._onScroll);
         // ws.on('redraw')
         //scroll event, + scrollLeft on wrapper
         //zoom event, -top px depending on the scrollHeight
+        //TODO resize window event - status -  not done
     }
 
     init() {
@@ -88,7 +89,16 @@ class Spectrogram {
                     scrolbarHeight !== 0 ? style(this.container, {top: `-${this.height + scrolbarHeight}px`}) : style(this.container, {top: `-${this.height}px`});
                     break;
             }
-        })
+        });
+
+        subjects.waveWrapper_state.subscribe((i) => {
+            switch (i.type) {
+                case RESIZE:
+                    this.clearCanvas();
+                    this.renderSpectrogram();
+                    break;
+            }
+        });
     }
 
     setM3dAudioState() {
@@ -177,7 +187,7 @@ class Spectrogram {
             const uniqueSamplesPerPx = buffer.length / this.spectrogramCanvas.width;
             noverlap = Math.max(0, Math.round(fftSamples - uniqueSamplesPerPx));
         }
-        const fft = new FFT(fftSamples, sampleRate , this.windowFunc, this.alpha);
+        const fft = new FFT(fftSamples, sampleRate, this.windowFunc, this.alpha);
         let currentOffset = 0;
 
         while (currentOffset + fftSamples < channelOne.length) {
@@ -208,7 +218,6 @@ class Spectrogram {
         const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
         let i;
         let j;
-        console.log(pixels);
         for (i = 0; i < pixels.length; i++) {
             for (j = 0; j < pixels[i].length; j++) {
                 my.spectrogramCtx.beginPath();

@@ -13,9 +13,8 @@ import {
     FINISHED
 } from "./M3dAudio/constants";
 import PropTypes from 'prop-types';
-let Chroma = require('chroma-js');
 
-import RFFT from "./M3dAudio/util/RFFT";
+let Chroma = require('chroma-js');
 
 class AudioPlayer extends Component {
     constructor(props) {
@@ -32,36 +31,34 @@ class AudioPlayer extends Component {
     }
 
     async componentDidMount() {
-        // const rfft = new RFFT(512, 48000);
-        // rfft.calculateSpectrum()
         /*
-        Wavesurfer.js
-            1. createDrawer() -> drawer.multicanvas.js extends drawer.js ->
-              1.5.1 createWrapper() from drawer.js
-              1.5.2 createElements() in multicanvas.js
+          Wavesurfer.js
+              1. createDrawer() -> drawer.multicanvas.js extends drawer.js ->
+                1.5.1 createWrapper() from drawer.js
+                1.5.2 createElements() in multicanvas.js
 
-              1.5.1 -> create 'wave' element which has click, dblclick and scroll events
+                1.5.1 -> create 'wave' element which has click, dblclick and scroll events
 
-              1.5.2 -> create another 'wave' element -> add two canvases (a. wave canvas, b. progress canvas = if user seeks to the middle of the canvas, left-hand side of the canvas is darker in color)
+                1.5.2 -> create another 'wave' element -> add two canvases (a. wave canvas, b. progress canvas = if user seeks to the middle of the canvas, left-hand side of the canvas is darker in color)
 
-            2. createBackend() .. create all audiocontext, scriptprocessor, gain etc etc
-            3. load() is called after drawer, backend are created via fireEvents
-            4. load url + decode + load arraybuffer + empty()
-            5. once finished loading arraybuffer to audiocontext and etc etc, drawBuffer() is called
-            6. ws.drawBuffer() calls backend.getPeaks():WebAudio then drawer.drawPeaks():Drawer
-            7. in drawer.drawPeaks(),
-                7.1 calls drawer.setWidth() -> multicanvas.updateSize() -> ( multicanvas.updateDimensions()  -> entry.updateDimensions()) to update both wave and progress wave dimension in the if statement
-                7.2 it calls drawWave(),which is an empty method initially but details are implemented in 1. because of MultiCanvas extends Drawer
-            8. drawWave() -> 8.1 Multicanvas.drawLines (crucial) -> entry.drawLine //using peak
-                          -> 8.2 Multicanvas.fillRect to draw a median line
+              2. createBackend() .. create all audiocontext, scriptprocessor, gain etc etc
+              3. load() is called after drawer, backend are created via fireEvents
+              4. load url + decode + load arraybuffer + empty()
+              5. once finished loading arraybuffer to audiocontext and etc etc, drawBuffer() is called
+              6. ws.drawBuffer() calls backend.getPeaks():WebAudio then drawer.drawPeaks():Drawer
+              7. in drawer.drawPeaks(),
+                  7.1 calls drawer.setWidth() -> multicanvas.updateSize() -> ( multicanvas.updateDimensions()  -> entry.updateDimensions()) to update both wave and progress wave dimension in the if statement
+                  7.2 it calls drawWave(),which is an empty method initially but details are implemented in 1. because of MultiCanvas extends Drawer
+              8. drawWave() -> 8.1 Multicanvas.drawLines (crucial) -> entry.drawLine //using peak
+                            -> 8.2 Multicanvas.fillRect to draw a median line
 
-               8.1 -> a. fill the style with color
-                      b. uses 2dcontext from 1.5.2.a to draw line and 1.5.2.b to draw progress line
+                 8.1 -> a. fill the style with color
+                        b. uses 2dcontext from 1.5.2.a to draw line and 1.5.2.b to draw progress line
 
 
-            ** in the case of zooming in/out, it repeats from step 7.1 based the value of params.minPxPerSec
+              ** in the case of zooming in/out, it repeats from step 7.1 based the value of params.minPxPerSec
 
-         */
+           */
         const m3dAudio = new M3dAudio();
 
         const colours2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
@@ -69,8 +66,6 @@ class AudioPlayer extends Component {
         const colors = Chroma.scale([
             '#ffffff',
             '#ffa500',
-            '#ff0000',
-            '#ff0000',
             '#ff0000',
         ]);
         m3dAudio.create({
@@ -103,7 +98,7 @@ class AudioPlayer extends Component {
                         container_id: '#waveform-spectrogram',
                         fftSamples: 1024,
                         windowFunc: 'hamming',
-                        spectrumGain:100,
+                        spectrumGain: 500,
                         colorMap: colors
                     }
                 },
@@ -114,9 +109,9 @@ class AudioPlayer extends Component {
                         interval: 5,
                         direction: 'top',
                         displayInterval: false,
-                    /*    fontColor:'#000000',
-                        fontFamily: `"Times New Roman", Times, serif`,
-                        fontSize: 12*/
+                        /*    fontColor:'#000000',
+                            fontFamily: `"Times New Roman", Times, serif`,
+                            fontSize: 12*/
                     }
                 },
                 {
@@ -126,10 +121,10 @@ class AudioPlayer extends Component {
                         interval: 5,
                         direction: 'bottom',
                         displayInterval: true,
-                        fontColor:'#000',
-                       /* fontWeight:800,
-                        fontFamily: `"Times New Roman", Times, serif`,
-                        fontSize: 12*/
+                        fontColor: '#000',
+                        /* fontWeight:800,
+                         fontFamily: `"Times New Roman", Times, serif`,
+                         fontSize: 12*/
                     }
                 },
             ]
@@ -141,9 +136,9 @@ class AudioPlayer extends Component {
         });
     }
 
-    zoomViaButton = (level)=>{
+    zoomViaButton = (level) => {
         this.state.m3dAudio.zoom(level);
-        this.setState({zoomLevel:level})
+        this.setState({zoomLevel: level})
     };
 
     play = () => {
@@ -210,17 +205,24 @@ class AudioPlayer extends Component {
             <div>
                 Zoom level: <input type="range" min="20" max="200" step={30} defaultValue={20} onChange={this.zoom}/>
                 <p>minpxpersec: {this.state.zoomLevel}</p>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(50)}>Zoom 50</button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(80)}>Zoom 80</button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(110)}>Zoom 110</button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(140)}>Zoom 140</button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(170)}>Zoom 170</button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(200)}>Zoom 200</button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(20)}>Zoom 20
+                </button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(50)}>Zoom 50
+                </button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(80)}>Zoom 80
+                </button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(110)}>Zoom 110
+                </button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(140)}>Zoom 140
+                </button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(170)}>Zoom 170
+                </button>
+                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(200)}>Zoom 200
+                </button>
             </div>
             <hr/>
             {/*<h1>some random txt</h1>*/}
-            <div style={{width: '600px', overflow: 'auto'}}>
-                {/*<div>*/}
+            <div style={{width: '100%', maxWidth: '600px'}}>
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
                 <div id="waveform-spectrogram"/>
