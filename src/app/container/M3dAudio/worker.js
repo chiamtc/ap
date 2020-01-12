@@ -1,3 +1,4 @@
+
 //beginner tutorial for web worker https://www.html5rocks.com/en/tutorials/workers/basics/#toc-enviornment-subworkers
 export default () => {
     self.onmessage = e => { // eslint-disable-line no-restricted-globals
@@ -253,14 +254,13 @@ export default () => {
                 postMessage(frequencies);
                 break;
             case 'resample':
-                const {oldMatrix, colorMap, spectrumGain} = e.data.data;
-                const columnsNumber = this.width;
+                const {oldMatrix, resample_width} = e.data.data;
+                // const columnsNumber = width;
                 const newMatrix = [];
-
                 const oldPiece = 1 / oldMatrix.length;
-                const newPiece = 1 / columnsNumber;
+                const newPiece = 1 / resample_width;
                 let i;
-                for (i = 0; i < columnsNumber; i++) {
+                for (i = 0; i < resample_width; i++) {
                     const column = new Array(oldMatrix[0].length);
                     let j;
 
@@ -285,14 +285,14 @@ export default () => {
                     }
 
                     const intColumn = new Array(oldMatrix[0].length);
-                    const colorColumn = new Array(oldMatrix[0].length);
+                    // const colorColumn = new Array(oldMatrix[0].length);
                     let m;
 
                     for (m = 0; m < oldMatrix[0].length; m++) {
                         intColumn[m] = column[m];
-                        colorColumn[m] = colorMap(column[m] * spectrumGain).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
+                        // colorColumn[m] = colorMap(column[m] * spectrumGain).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
                     }
-                    newMatrix.push(colorColumn);
+                    newMatrix.push(intColumn);
                 }
 
                 postMessage(newMatrix);

@@ -1,8 +1,10 @@
 import {subjects} from "./M3dAudio";
 import FFT from "./util/FFT";
-
 import worker from "./worker.js";
 import WebWorker from "./workerSetup";
+// import greenlet from 'greenlet'
+// import operative from 'operative';
+import { Canvas, Image, transfer } from 'canvas-webworker';
 /**
  * 1. create wrapper
  * 2. create canvas
@@ -190,7 +192,6 @@ class Spectrogram {
     }
 
 
-
     //optimize this using https://github.com/casperlamboo/canvas-webworker
     drawSpectrogram(frequenciesData, my) {
         const spectrCc = my.spectrogramCtx;
@@ -198,13 +199,50 @@ class Spectrogram {
         const height = my.height;
 
 
+        /* //using greenlet
+          let getName = greenlet((username) => {
+               let url = `https://api.github.com/users/${username}`
+               return fetch(url).then((res) => {
+                   return res.json()
+               })
+               // const res = await fetch(url);
+               // let profile = await res.json()
+               // return profile.name
+           })
 
-       /* this.worker.postMessage({
+           getName('developit').then(console.log, console.error);*/
+
+        /*
+        let getName = greenlet((frequencies, colorMap, spectrumGain) => {
+            const a = my.resample(frequencies);
+            console.log('a',a)
+        })
+        getName({
+            frequencies:frequenciesData,
+            colorMap:this.colorMap,
+            spectrumGain: this.spectrumGain
+        })*/
+
+        //using operative
+        /* var lodashWorker = operative(function(method, args, cb) {
+             cb(
+                 _[method].apply(_, args)
+             );
+         }, [
+             'http://cdnjs.cloudflare.com/ajax/libs/lodash.js/1.3.1/lodash.min.js'
+         ]);
+
+         lodashWorker('uniq', [[1, 2, 3, 3, 2, 1, 4, 3, 2]], function(output) {
+             output; // => [1, 2, 3, 4]
+         });*/
+
+
+        this.worker.postMessage({
             type: 'resample',
             data: {
-               frequencies:frequenciesData,
-                colorMap:this.colorMap,
-                spectrumGain: this.spectrumGain
+                oldMatrix: frequenciesData,
+                // colorMap:this.colorMap,
+                resample_width: this.width,
             }
         })
         this.worker.onmessage = (event) => {
@@ -214,27 +252,31 @@ class Spectrogram {
             const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
             let i;
             let j;
+            //use canvas-webworker for this part
             for (i = 0; i < pixels.length; i++) {
                 for (j = 0; j < pixels[i].length; j++) {
                     my.spectrogramCtx.beginPath();
-                    my.spectrogramCtx.fillStyle = pixels[i][j];
+                    my.spectrogramCtx.fillStyle = this.colorMap(pixels[i][j] * this.spectrumGain).hex();
                     my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
                     my.spectrogramCtx.fill();
                 }
             }
-        };*/
-        const pixels = my.resample(frequenciesData);
-        const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
-        let i;
-        let j;
-        for (i = 0; i < pixels.length; i++) {
-            for (j = 0; j < pixels[i].length; j++) {
-                my.spectrogramCtx.beginPath();
-                my.spectrogramCtx.fillStyle = pixels[i][j];
-                my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
-                my.spectrogramCtx.fill();
-            }
-        }
+        };
+
+        //main thread execution
+        /* const pixels = my.resample(frequenciesData);
+         const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
+         let i;
+         let j;
+         for (i = 0; i < pixels.length; i++) {
+             for (j = 0; j < pixels[i].length; j++) {
+                 my.spectrogramCtx.beginPath();
+                 my.spectrogramCtx.fillStyle = this.colorMap(pixels[i][j] * 200).hex();
+                 // my.spectrogramCtx.fillStyle = pixels[i][j];
+                 my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
+                 my.spectrogramCtx.fill();
+             }
+         }*/
     }
 
 
@@ -275,10 +317,10 @@ class Spectrogram {
 
             for (m = 0; m < oldMatrix[0].length; m++) {
                 intColumn[m] = column[m];
-                colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //the problem when using webworkers
+                // colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //the problem when using webworkers
                 //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
             }
-            newMatrix.push(colorColumn);
+            newMatrix.push(intColumn);
         }
         return newMatrix;
     }
