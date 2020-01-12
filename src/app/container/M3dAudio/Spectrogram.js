@@ -1,5 +1,8 @@
 import {subjects} from "./M3dAudio";
 import FFT from "./util/FFT";
+
+import worker from "./worker.js";
+import WebWorker from "./workerSetup";
 /**
  * 1. create wrapper
  * 2. create canvas
@@ -59,16 +62,11 @@ class Spectrogram {
         this.scroll = true;
         this.drawer = null; //aka wrapper;
         this.web_audio = null; //aka web_audio
-
-        //TODO status - done
-        // drawer.wrapper.addEventListener('scroll', this._onScroll);
-        // ws.on('redraw')
-        //scroll event, + scrollLeft on wrapper
-        //zoom event, -top px depending on the scrollHeight
-        //TODO resize window event - status -  not done
+        this.worker =null;
     }
 
     init() {
+        this.worker =  new WebWorker(worker);
         this.setM3dAudioState();
         this.createContainer(); //comment it out for <spectrogram> tag instead of <div> <spectrogram> </div>
         this.createWrapper();
@@ -167,9 +165,15 @@ class Spectrogram {
         this.spectrogramCanvas.style.width = canvasWidth;
         this.width = this.drawer.width;
         //TODO add loadFrequenciesData by fetching them via url ?
-        this.getFrequencies(this.drawSpectrogram);
+
+        this.worker.postMessage(this.fftSamples)
+        this.worker.onmessage = (event) => {
+           console.log('main script', event)
+        };
+        // this.getFrequencies(this.drawSpectrogram);
     }
 
+    //optimize this to webworker
     getFrequencies(cb) {
         const fftSamples = this.fftSamples;
         const buffer = (this.buffer = this.web_audio.filteredBuffer);
