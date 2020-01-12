@@ -167,70 +167,62 @@ class Spectrogram {
         //TODO add loadFrequenciesData by fetching them via url ?
 
         this.worker.postMessage({
-            fftSamples: this.fftSamples,
-            buffer: {
-                channelData:this.web_audio.filteredBuffer.getChannelData(0),
-                length: this.web_audio.filteredBuffer.length,
-                sampleRate: this.web_audio.filteredBuffer.sampleRate
-            },
-            noverlap: this.noverlap,
-            width: this.spectrogramCanvas.width,
-            windowFunc:this.windowFunc,
-            alpha: this.alpha,
-            // FFT:FFT
+            type: 'getFrequencies',
+            data: {
+                fftSamples: this.fftSamples,
+                buffer: {
+                    channelData: this.web_audio.filteredBuffer.getChannelData(0),
+                    length: this.web_audio.filteredBuffer.length,
+                    sampleRate: this.web_audio.filteredBuffer.sampleRate
+                },
+                noverlap: this.noverlap,
+                width: this.spectrogramCanvas.width,
+                windowFunc: this.windowFunc,
+                alpha: this.alpha,
+            }
         })
         this.worker.onmessage = (event) => {
-            console.log('main script', event)
+            console.log('main script - getFrequencies', event)
             this.drawSpectrogram(event.data, this);
         };
+        //main thread execution // used to be
         // this.getFrequencies(this.drawSpectrogram);
     }
 
-    //optimize this to webworker
-    getFrequencies(cb) {
-        const fftSamples = this.fftSamples;
-        const buffer = this.web_audio.filteredBuffer;
-        const channelOne = buffer.getChannelData(0);
-        const bufferLength = buffer.length;
-        const sampleRate = buffer.sampleRate;
-        const frequencies = [];
-        if (!buffer) {
-            // this.fireEvent('error', 'Web Audio buffer is not available');
-            return;
-        }
 
-        let noverlap = this.noverlap;
-        if (!noverlap) {
-            const uniqueSamplesPerPx = buffer.length / this.spectrogramCanvas.width;
-            noverlap = Math.max(0, Math.round(fftSamples - uniqueSamplesPerPx));
-        }
-        const fft = new FFT(fftSamples, sampleRate, this.windowFunc, this.alpha);
-        let currentOffset = 0;
 
-        while (currentOffset + fftSamples < channelOne.length) {
-            const segment = channelOne.slice(
-                currentOffset,
-                currentOffset + fftSamples
-            );
-            const spectrum = fft.calculateSpectrum(segment);
-
-            const array = new Uint8Array(fftSamples / 2);
-            let j;
-            for (j = 0; j < fftSamples / 2; j++) {
-                array[j] = Math.max(-255, Math.log10(spectrum[j]) * 45);
-            }
-            // frequencies.push(array);
-            frequencies.push(spectrum); //using this same as central not array. TODO: more research
-            currentOffset += fftSamples - noverlap;
-        }
-
-        cb(frequencies, this);
-    }
-
+    //optimize this using https://github.com/casperlamboo/canvas-webworker
     drawSpectrogram(frequenciesData, my) {
         const spectrCc = my.spectrogramCtx;
         const length = my.web_audio.getDuration();
         const height = my.height;
+
+
+
+       /* this.worker.postMessage({
+            type: 'resample',
+            data: {
+               frequencies:frequenciesData,
+                colorMap:this.colorMap,
+                spectrumGain: this.spectrumGain
+            }
+        })
+        this.worker.onmessage = (event) => {
+            console.log('main script - resample', event)
+            // this.drawSpectrogram(event.data, this);
+            const pixels = event.data//my.resample(frequenciesData);
+            const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
+            let i;
+            let j;
+            for (i = 0; i < pixels.length; i++) {
+                for (j = 0; j < pixels[i].length; j++) {
+                    my.spectrogramCtx.beginPath();
+                    my.spectrogramCtx.fillStyle = pixels[i][j];
+                    my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
+                    my.spectrogramCtx.fill();
+                }
+            }
+        };*/
         const pixels = my.resample(frequenciesData);
         const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
         let i;
@@ -283,7 +275,8 @@ class Spectrogram {
 
             for (m = 0; m < oldMatrix[0].length; m++) {
                 intColumn[m] = column[m];
-                colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
+                colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //the problem when using webworkers
+                //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
             }
             newMatrix.push(colorColumn);
         }
