@@ -2,9 +2,11 @@ import {subjects} from "./M3dAudio";
 import FFT from "./util/FFT";
 import worker from "./worker.js";
 import WebWorker from "./workerSetup";
+const Chroma = require('chroma-js')
 // import greenlet from 'greenlet'
 // import operative from 'operative';
-import { Canvas, Image, transfer } from 'canvas-webworker';
+import threadify from 'threadify'
+import {Canvas, Image, transfer} from 'canvas-webworker';
 /**
  * 1. create wrapper
  * 2. create canvas
@@ -237,14 +239,22 @@ class Spectrogram {
          });*/
 
 
+        // const ff = new Function(this.colorMap.toString());
+        // console.log(ff.apply())
+
+
+
+
+        //library worker https://blog.krawaller.se/posts/a-library-webworker-wrapper/ this one tomorrow
         this.worker.postMessage({
             type: 'resample',
             data: {
                 oldMatrix: frequenciesData,
-                // colorMap:this.colorMap,
+                // colorMap: this.colorMap,
                 resample_width: this.width,
+                spectrumGain: this.spectrumGain
             }
-        })
+        });
         this.worker.onmessage = (event) => {
             console.log('main script - resample', event)
             // this.drawSpectrogram(event.data, this);
@@ -317,10 +327,10 @@ class Spectrogram {
 
             for (m = 0; m < oldMatrix[0].length; m++) {
                 intColumn[m] = column[m];
-                // colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //the problem when using webworkers
+                colorColumn[m] = this.colorMap(column[m] * this.spectrumGain).hex(); //the problem when using webworkers
                 //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
             }
-            newMatrix.push(intColumn);
+            newMatrix.push(colorColumn);
         }
         return newMatrix;
     }

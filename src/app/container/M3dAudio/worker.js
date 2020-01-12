@@ -1,4 +1,3 @@
-
 //beginner tutorial for web worker https://www.html5rocks.com/en/tutorials/workers/basics/#toc-enviornment-subworkers
 export default () => {
     self.onmessage = e => { // eslint-disable-line no-restricted-globals
@@ -254,8 +253,12 @@ export default () => {
                 postMessage(frequencies);
                 break;
             case 'resample':
-                const {oldMatrix, resample_width} = e.data.data;
-                // const columnsNumber = width;
+                const {oldMatrix, resample_width, colorMap, spectrumGain} = e.data.data;
+                //https://stackoverflow.com/questions/11909934/how-to-pass-functions-to-javascript-web-worker fn in webworker
+                // console.log(colorMap);
+                // const fn2 = new Function(colorMap[0], colorMap[1], colorMap[2]);
+                // console.log(fn2(1,2))
+                // console.log(colorMap)
                 const newMatrix = [];
                 const oldPiece = 1 / oldMatrix.length;
                 const newPiece = 1 / resample_width;
@@ -285,7 +288,7 @@ export default () => {
                     }
 
                     const intColumn = new Array(oldMatrix[0].length);
-                    // const colorColumn = new Array(oldMatrix[0].length);
+                    const colorColumn = new Array(oldMatrix[0].length);
                     let m;
 
                     for (m = 0; m < oldMatrix[0].length; m++) {
