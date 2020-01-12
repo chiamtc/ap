@@ -1,3 +1,4 @@
+//source reference: https://codesandbox.io/s/reactworker-7v5lv
 export default class WebWorker {
     constructor(worker) {
         const code = worker.toString();

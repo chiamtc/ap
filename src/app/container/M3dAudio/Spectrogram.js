@@ -62,11 +62,11 @@ class Spectrogram {
         this.scroll = true;
         this.drawer = null; //aka wrapper;
         this.web_audio = null; //aka web_audio
-        this.worker =null;
+        this.worker = null;
     }
 
     init() {
-        this.worker =  new WebWorker(worker);
+        this.worker = new WebWorker(worker);
         this.setM3dAudioState();
         this.createContainer(); //comment it out for <spectrogram> tag instead of <div> <spectrogram> </div>
         this.createWrapper();
@@ -166,9 +166,22 @@ class Spectrogram {
         this.width = this.drawer.width;
         //TODO add loadFrequenciesData by fetching them via url ?
 
-        this.worker.postMessage(this.fftSamples)
+        this.worker.postMessage({
+            fftSamples: this.fftSamples,
+            buffer: {
+                channelData:this.web_audio.filteredBuffer.getChannelData(0),
+                length: this.web_audio.filteredBuffer.length,
+                sampleRate: this.web_audio.filteredBuffer.sampleRate
+            },
+            noverlap: this.noverlap,
+            width: this.spectrogramCanvas.width,
+            windowFunc:this.windowFunc,
+            alpha: this.alpha,
+            // FFT:FFT
+        })
         this.worker.onmessage = (event) => {
-           console.log('main script', event)
+            console.log('main script', event)
+            this.drawSpectrogram(event.data, this);
         };
         // this.getFrequencies(this.drawSpectrogram);
     }
@@ -176,7 +189,7 @@ class Spectrogram {
     //optimize this to webworker
     getFrequencies(cb) {
         const fftSamples = this.fftSamples;
-        const buffer = (this.buffer = this.web_audio.filteredBuffer);
+        const buffer = this.web_audio.filteredBuffer;
         const channelOne = buffer.getChannelData(0);
         const bufferLength = buffer.length;
         const sampleRate = buffer.sampleRate;
