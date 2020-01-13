@@ -1,7 +1,8 @@
 import {subjects} from "./M3dAudio";
 import FFT from "./util/FFT";
-import worker from "./worker.js";
-import WebWorker from "./workerSetup";
+import worker from "./workers/worker.js";
+import WebWorker from "./workers/workerSetup";
+
 const Chroma = require('chroma-js')
 // import greenlet from 'greenlet'
 // import operative from 'operative';
@@ -26,10 +27,17 @@ import {Canvas, Image, transfer} from 'canvas-webworker';
 import style from "./util/Style";
 import {CHANGE_FILTER, CLICK, RESIZE, ZOOM} from "./constants";
 
-//TODO: read
+//TODO: read fft topic
 // https://dsp.stackexchange.com/questions/42428/understanding-overlapping-in-stft
 // https://dsp.stackexchange.com/questions/47448/window-periodoverlap-and-fft
 // OG fft + spectrogram code https://developer.mozilla.org/en-US/docs/Archive/Misc_top_level/Visualizing_Audio_Spectrum
+
+//TODO: read spectrogram drawing topic
+// even better read: https://noisehack.com/build-music-visualizer-web-audio-api/
+//http://arc.id.au/Spectrogram.html
+//https://github.com/bastibe/WebGL-Spectrogram
+// https://stackoverflow.com/questions/57125984/how-can-i-add-a-glsl-fragment-shader-audio-visualization/57126857#57126857
+// https://github.com/a-vis/gl-spectrogram
 class Spectrogram {
     constructor(params, m3dAudio) {
         this.m3dAudio = m3dAudio;
@@ -200,7 +208,34 @@ class Spectrogram {
         const length = my.web_audio.getDuration();
         const height = my.height;
 
-
+        this.worker.postMessage({
+            type: 'resample',
+            data: {
+                oldMatrix: frequenciesData,
+                // colorMap: this.colorMap,
+                resample_width: this.width,
+                spectrumGain: this.spectrumGain
+            }
+        });
+        this.worker.onmessage = (event) => {
+            requestAnimationFrame(() => {
+                console.log('main script - resample', event)
+                // this.drawSpectrogram(event.data, this);
+                const pixels = event.data//my.resample(frequenciesData);
+                const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
+                let i;
+                let j;
+                //use canvas-webworker for this part
+                for (i = 0; i < pixels.length; i++) {
+                    for (j = 0; j < pixels[i].length; j++) {
+                        my.spectrogramCtx.beginPath();
+                        my.spectrogramCtx.fillStyle = this.colorMap(pixels[i][j] * this.spectrumGain).hex();
+                        my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
+                        my.spectrogramCtx.fill();
+                    }
+                }
+            })
+        };
         /* //using greenlet
           let getName = greenlet((username) => {
                let url = `https://api.github.com/users/${username}`
@@ -239,39 +274,34 @@ class Spectrogram {
          });*/
 
 
-        // const ff = new Function(this.colorMap.toString());
-        // console.log(ff.apply())
-
-
-
-
         //library worker https://blog.krawaller.se/posts/a-library-webworker-wrapper/ this one tomorrow
-        this.worker.postMessage({
-            type: 'resample',
-            data: {
-                oldMatrix: frequenciesData,
-                // colorMap: this.colorMap,
-                resample_width: this.width,
-                spectrumGain: this.spectrumGain
-            }
-        });
-        this.worker.onmessage = (event) => {
-            console.log('main script - resample', event)
-            // this.drawSpectrogram(event.data, this);
-            const pixels = event.data//my.resample(frequenciesData);
-            const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
-            let i;
-            let j;
-            //use canvas-webworker for this part
-            for (i = 0; i < pixels.length; i++) {
-                for (j = 0; j < pixels[i].length; j++) {
-                    my.spectrogramCtx.beginPath();
-                    my.spectrogramCtx.fillStyle = this.colorMap(pixels[i][j] * this.spectrumGain).hex();
-                    my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
-                    my.spectrogramCtx.fill();
+        //current status - execute resample() in webworker and draw it on main thread
+        /*    this.worker.postMessage({
+                type: 'resample',
+                data: {
+                    oldMatrix: frequenciesData,
+                    // colorMap: this.colorMap,
+                    resample_width: this.width,
+                    spectrumGain: this.spectrumGain
                 }
-            }
-        };
+            });
+            this.worker.onmessage = (event) => {
+                console.log('main script - resample', event)
+                // this.drawSpectrogram(event.data, this);
+                const pixels = event.data//my.resample(frequenciesData);
+                const heightFactor = my.buffer ? 2 / my.buffer.numberOfChannels : 1;
+                let i;
+                let j;
+                //use canvas-webworker for this part
+                for (i = 0; i < pixels.length; i++) {
+                    for (j = 0; j < pixels[i].length; j++) {
+                        my.spectrogramCtx.beginPath();
+                        my.spectrogramCtx.fillStyle = this.colorMap(pixels[i][j] * this.spectrumGain).hex();
+                        my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
+                        my.spectrogramCtx.fill();
+                    }
+                }
+            };*/
 
         //main thread execution
         /* const pixels = my.resample(frequenciesData);

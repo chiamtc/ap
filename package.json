@@ -37,6 +37,7 @@
     "threadify": "^0.2.4"
   },
   "devDependencies": {
+    "@ampproject/worker-dom": "^0.23.2",
     "@babel/cli": "^7.6.2",
     "@babel/core": "^7.6.2",
     "@babel/parser": "^7.6.2",

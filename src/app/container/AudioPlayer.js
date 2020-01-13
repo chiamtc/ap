@@ -13,6 +13,7 @@ import {
     FINISHED
 } from "./M3dAudio/constants";
 import PropTypes from 'prop-types';
+import {upgradeElement} from "@ampproject/worker-dom";
 
 let Chroma = require('chroma-js');
 
@@ -92,9 +93,9 @@ class AudioPlayer extends Component {
                     type: 'spectrogram',
                     params: {
                         container_id: '#waveform-spectrogram',
-                        fftSamples: 512,
+                        fftSamples: 1024,
                         windowFunc: 'hamming',
-                        spectrumGain: 200,
+                        spectrumGain: 1000,
                         colorMap: colors
                     }
                 },

@@ -129,7 +129,7 @@ class WebAudio {
 
         //method 3: rxjs -> promise
         return new Observable(observer => {
-            this.offlineAudioContext.decodeAudioData(arrayBuffer,
+            this.audioContext.decodeAudioData(arrayBuffer,
                 (value) => {
                     observer.next(value); //observer fires (value:AudioBuffer):Observable
                     observer.complete();

@@ -4,6 +4,10 @@ export default () => {
         if (!e) return;
         switch (e.data.type) {
             case 'getFrequencies':
+                importScripts('https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js', 'https://cdn.jsdelivr.net/npm/chroma-js@2.1.0/chroma.min.js');
+                const b = chroma('#D4F880').darken().hex();
+                const a = moment().unix();
+                console.log('a',a, b)
                 const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
                     this.bufferSize = bufferSize;
                     this.sampleRate = sampleRate;
