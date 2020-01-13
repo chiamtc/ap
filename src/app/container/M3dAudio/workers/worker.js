@@ -3,7 +3,19 @@ export default () => {
     self.onmessage = e => { // eslint-disable-line no-restricted-globals
         if (!e) return;
         switch (e.data.type) {
-            case 'getFrequencies':
+            case 'ww_getFrequencies':
+                let {
+                    fftSamples,
+                    buffer,
+                    noverlap,
+                    width,
+                    windowFunc,
+                    alpha,
+                    // FFT_Blob
+                } = e.data.data;
+                // importScripts(FFT_Blob);
+                //to reduce the chances of failure to create url(blob) object, fft class stays here.
+                //I've gotten  errors -> Refused to execute script from 'blob:http://localhost:9000/ac2e3a22-5634-4b24-ba90-826536e102f7' because its MIME type ('') is not executable
                 const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
                     this.bufferSize = bufferSize;
                     this.sampleRate = sampleRate;
@@ -21,69 +33,45 @@ export default () => {
                     switch (windowFunc) {
                         case 'bartlett':
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    (2 / (bufferSize - 1)) *
-                                    ((bufferSize - 1) / 2 - Math.abs(i - (bufferSize - 1) / 2));
+                                this.windowValues[i] = (2 / (bufferSize - 1)) * ((bufferSize - 1) / 2 - Math.abs(i - (bufferSize - 1) / 2));
                             }
                             break;
                         case 'bartlettHann':
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    0.62 -
-                                    0.48 * Math.abs(i / (bufferSize - 1) - 0.5) -
-                                    0.38 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
+                                this.windowValues[i] = 0.62 - 0.48 * Math.abs(i / (bufferSize - 1) - 0.5) - 0.38 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
                             }
                             break;
                         case 'blackman':
                             alpha = alpha || 0.16;
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    (1 - alpha) / 2 -
-                                    0.5 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1)) +
-                                    (alpha / 2) *
-                                    Math.cos((4 * Math.PI * i) / (bufferSize - 1));
+                                this.windowValues[i] = (1 - alpha) / 2 - 0.5 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1)) + (alpha / 2) * Math.cos((4 * Math.PI * i) / (bufferSize - 1));
                             }
                             break;
                         case 'cosine':
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] = Math.cos(
-                                    (Math.PI * i) / (bufferSize - 1) - Math.PI / 2
-                                );
+                                this.windowValues[i] = Math.cos((Math.PI * i) / (bufferSize - 1) - Math.PI / 2);
                             }
                             break;
                         case 'gauss':
                             alpha = alpha || 0.25;
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] = Math.pow(
-                                    Math.E,
-                                    -0.5 *
-                                    Math.pow(
-                                        (i - (bufferSize - 1) / 2) /
-                                        ((alpha * (bufferSize - 1)) / 2),
-                                        2
-                                    )
-                                );
+                                this.windowValues[i] = Math.pow(Math.E, -0.5 * Math.pow((i - (bufferSize - 1) / 2) / ((alpha * (bufferSize - 1)) / 2), 2));
                             }
                             break;
                         case 'hamming':
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    (0.54 - 0.46) *
-                                    Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
+                                this.windowValues[i] = (0.54 - 0.46) * Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
                             }
                             break;
                         case 'hann':
                         case undefined:
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    0.5 * (1 - Math.cos((Math.PI * 2 * i) / (bufferSize - 1)));
+                                this.windowValues[i] = 0.5 * (1 - Math.cos((Math.PI * 2 * i) / (bufferSize - 1)));
                             }
                             break;
                         case 'lanczoz':
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    Math.sin(Math.PI * ((2 * i) / (bufferSize - 1) - 1)) /
-                                    (Math.PI * ((2 * i) / (bufferSize - 1) - 1));
+                                this.windowValues[i] = Math.sin(Math.PI * ((2 * i) / (bufferSize - 1) - 1)) / (Math.PI * ((2 * i) / (bufferSize - 1) - 1));
                             }
                             break;
                         case 'rectangular':
@@ -93,9 +81,7 @@ export default () => {
                             break;
                         case 'triangular':
                             for (i = 0; i < bufferSize; i++) {
-                                this.windowValues[i] =
-                                    (2 / bufferSize) *
-                                    (bufferSize / 2 - Math.abs(i - (bufferSize - 1) / 2));
+                                this.windowValues[i] = (2 / bufferSize) * (bufferSize / 2 - Math.abs(i - (bufferSize - 1) / 2));
                             }
                             break;
                         default:
@@ -104,7 +90,6 @@ export default () => {
 
                     let limit = 1;
                     let bit = bufferSize >> 1;
-                    // let i;
 
                     while (limit < bufferSize) {
                         for (i = 0; i < limit; i++) {
@@ -121,7 +106,6 @@ export default () => {
                     }
 
                     this.calculateSpectrum = function (buffer) {
-                        // Locally scope variables for speed up
                         let bufferSize = this.bufferSize,
                             cosTable = this.cosTable,
                             sinTable = this.sinTable,
@@ -140,10 +124,7 @@ export default () => {
                             throw 'Invalid buffer size, must be a power of 2.';
                         }
                         if (bufferSize !== buffer.length) {
-                            throw 'Supplied buffer is not the same size as defined FFT. FFT Size: ' +
-                            bufferSize +
-                            ' Buffer Size: ' +
-                            buffer.length;
+                            throw `Supplied buffer is not the same size as defined FFT. FFT Size: ${bufferSize}. Buffer Size: ${buffer.length}`;
                         }
 
                         var halfSize = 1,
@@ -157,8 +138,7 @@ export default () => {
                             tmpReal;
 
                         for (let i = 0; i < bufferSize; i++) {
-                            real[i] =
-                                buffer[reverseTable[i]] * this.windowValues[reverseTable[i]];
+                            real[i] = buffer[reverseTable[i]] * this.windowValues[reverseTable[i]];
                             imag[i] = 0;
                         }
 
@@ -211,22 +191,10 @@ export default () => {
                         return spectrum;
                     };
                 };
-                let {
-                    fftSamples,
-                    buffer,
-                    noverlap,
-                    width,
-                    windowFunc,
-                    alpha,
-                } = e.data.data;
                 const channelOne = buffer.channelData;
-                const bufferLength = buffer.length;
                 const sampleRate = buffer.sampleRate;
                 const frequencies = [];
-                if (!buffer) {
-                    // fireEvent('error', 'Web Audio buffer is not available');
-                    return;
-                }
+                if (!buffer) return;
                 if (!noverlap) {
                     const uniqueSamplesPerPx = buffer.length / width;
                     noverlap = Math.max(0, Math.round(fftSamples - uniqueSamplesPerPx));
@@ -246,13 +214,12 @@ export default () => {
                     for (j = 0; j < fftSamples / 2; j++) {
                         array[j] = Math.max(-255, Math.log10(spectrum[j]) * 45);
                     }
-                    // frequencies.push(array);
-                    frequencies.push(spectrum); //using this same as central not array. TODO: more research
+                    frequencies.push(spectrum);
                     currentOffset += fftSamples - noverlap;
                 }
                 postMessage(frequencies);
                 break;
-            case 'resample':
+            case 'ww_resample':
                 importScripts('https://cdn.jsdelivr.net/npm/chroma-js@2.1.0/chroma.min.js');
                 const {oldMatrix, resample_width, colorMap, spectrumGain} = e.data.data;
 
@@ -295,7 +262,6 @@ export default () => {
                     }
                     newMatrix.push(colorColumn);
                 }
-
                 postMessage(newMatrix);
                 break;
         }

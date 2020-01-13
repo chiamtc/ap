@@ -10,7 +10,9 @@ import {
     PLAYING,
     RESUME,
     PAUSED,
-    FINISHED
+    FINISHED,
+    TIMELINE,
+    SPECTROGRAM
 } from "./M3dAudio/constants";
 import PropTypes from 'prop-types';
 
@@ -62,9 +64,12 @@ class AudioPlayer extends Component {
         const m3dAudio = new M3dAudio();
 
         // const colors = Chroma.scale(['#ffffff', '#ffa500', '#ff0000']);
-        const colors = ['#ffffff', '#ffa500', '#ff0000']
-        const colors2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
-        const colors3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
+        // const colors2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
+        // const colors3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
+
+        const colors = ['#ffffff', '#ffa500', '#ff0000'];
+        const colors2 = ['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff'];
+        const colors3 = ['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54']
         m3dAudio.create({
             container_id: '#waveform-container',
             filters: this.props.filters,
@@ -90,7 +95,7 @@ class AudioPlayer extends Component {
             },
             plugins: [
                 {
-                    type: 'spectrogram',
+                    type: SPECTROGRAM,
                     params: {
                         container_id: '#waveform-spectrogram',
                         fftSamples: 1024,
@@ -100,7 +105,7 @@ class AudioPlayer extends Component {
                     }
                 },
                 {
-                    type: 'timeline',
+                    type: TIMELINE,
                     params: {
                         container_id: '#waveform-timeline-top',
                         interval: 5,
@@ -112,7 +117,7 @@ class AudioPlayer extends Component {
                     }
                 },
                 {
-                    type: 'timeline',
+                    type: TIMELINE,
                     params: {
                         container_id: '#waveform-timeline-bottom',
                         interval: 5,
@@ -218,8 +223,8 @@ class AudioPlayer extends Component {
                 </button>
             </div>
             <hr/>
-            {/*<h1>some random txt</h1>*/}
             <div style={{width: '100%', maxWidth: '600px'}}>
+            {/*<div>*/}
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
                 <div id="waveform-spectrogram"/>

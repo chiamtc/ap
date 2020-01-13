@@ -1,3 +1,4 @@
+//Source: wavesurfer.js and dsp.js
 const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
     this.bufferSize = bufferSize;
     this.sampleRate = sampleRate;
@@ -15,69 +16,45 @@ const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
     switch (windowFunc) {
         case 'bartlett':
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    (2 / (bufferSize - 1)) *
-                    ((bufferSize - 1) / 2 - Math.abs(i - (bufferSize - 1) / 2));
+                this.windowValues[i] = (2 / (bufferSize - 1)) * ((bufferSize - 1) / 2 - Math.abs(i - (bufferSize - 1) / 2));
             }
             break;
         case 'bartlettHann':
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    0.62 -
-                    0.48 * Math.abs(i / (bufferSize - 1) - 0.5) -
-                    0.38 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
+                this.windowValues[i] = 0.62 - 0.48 * Math.abs(i / (bufferSize - 1) - 0.5) - 0.38 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
             }
             break;
         case 'blackman':
             alpha = alpha || 0.16;
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    (1 - alpha) / 2 -
-                    0.5 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1)) +
-                    (alpha / 2) *
-                    Math.cos((4 * Math.PI * i) / (bufferSize - 1));
+                this.windowValues[i] = (1 - alpha) / 2 - 0.5 * Math.cos((Math.PI * 2 * i) / (bufferSize - 1)) + (alpha / 2) * Math.cos((4 * Math.PI * i) / (bufferSize - 1));
             }
             break;
         case 'cosine':
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] = Math.cos(
-                    (Math.PI * i) / (bufferSize - 1) - Math.PI / 2
-                );
+                this.windowValues[i] = Math.cos((Math.PI * i) / (bufferSize - 1) - Math.PI / 2);
             }
             break;
         case 'gauss':
             alpha = alpha || 0.25;
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] = Math.pow(
-                    Math.E,
-                    -0.5 *
-                    Math.pow(
-                        (i - (bufferSize - 1) / 2) /
-                        ((alpha * (bufferSize - 1)) / 2),
-                        2
-                    )
-                );
+                this.windowValues[i] = Math.pow(Math.E, -0.5 * Math.pow((i - (bufferSize - 1) / 2) / ((alpha * (bufferSize - 1)) / 2), 2));
             }
             break;
         case 'hamming':
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    (0.54 - 0.46) *
-                    Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
+                this.windowValues[i] = (0.54 - 0.46) * Math.cos((Math.PI * 2 * i) / (bufferSize - 1));
             }
             break;
         case 'hann':
         case undefined:
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    0.5 * (1 - Math.cos((Math.PI * 2 * i) / (bufferSize - 1)));
+                this.windowValues[i] = 0.5 * (1 - Math.cos((Math.PI * 2 * i) / (bufferSize - 1)));
             }
             break;
         case 'lanczoz':
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    Math.sin(Math.PI * ((2 * i) / (bufferSize - 1) - 1)) /
-                    (Math.PI * ((2 * i) / (bufferSize - 1) - 1));
+                this.windowValues[i] = Math.sin(Math.PI * ((2 * i) / (bufferSize - 1) - 1)) / (Math.PI * ((2 * i) / (bufferSize - 1) - 1));
             }
             break;
         case 'rectangular':
@@ -87,9 +64,7 @@ const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             break;
         case 'triangular':
             for (i = 0; i < bufferSize; i++) {
-                this.windowValues[i] =
-                    (2 / bufferSize) *
-                    (bufferSize / 2 - Math.abs(i - (bufferSize - 1) / 2));
+                this.windowValues[i] = (2 / bufferSize) * (bufferSize / 2 - Math.abs(i - (bufferSize - 1) / 2));
             }
             break;
         default:
@@ -98,7 +73,6 @@ const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
 
     let limit = 1;
     let bit = bufferSize >> 1;
-    // let i;
 
     while (limit < bufferSize) {
         for (i = 0; i < limit; i++) {
@@ -115,7 +89,6 @@ const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
     }
 
     this.calculateSpectrum = function (buffer) {
-        // Locally scope variables for speed up
         let bufferSize = this.bufferSize,
             cosTable = this.cosTable,
             sinTable = this.sinTable,
@@ -134,10 +107,7 @@ const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             throw 'Invalid buffer size, must be a power of 2.';
         }
         if (bufferSize !== buffer.length) {
-            throw 'Supplied buffer is not the same size as defined FFT. FFT Size: ' +
-            bufferSize +
-            ' Buffer Size: ' +
-            buffer.length;
+            throw `Supplied buffer is not the same size as defined FFT. FFT Size: ${bufferSize}. Buffer Size: ${buffer.length}`;
         }
 
         var halfSize = 1,
@@ -151,8 +121,7 @@ const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
             tmpReal;
 
         for (let i = 0; i < bufferSize; i++) {
-            real[i] =
-                buffer[reverseTable[i]] * this.windowValues[reverseTable[i]];
+            real[i] = buffer[reverseTable[i]] * this.windowValues[reverseTable[i]];
             imag[i] = 0;
         }
 
