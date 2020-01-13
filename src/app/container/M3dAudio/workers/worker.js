@@ -4,10 +4,6 @@ export default () => {
         if (!e) return;
         switch (e.data.type) {
             case 'getFrequencies':
-                importScripts('https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js', 'https://cdn.jsdelivr.net/npm/chroma-js@2.1.0/chroma.min.js');
-                const b = chroma('#D4F880').darken().hex();
-                const a = moment().unix();
-                console.log('a',a, b)
                 const FFT = function (bufferSize, sampleRate, windowFunc, alpha) {
                     this.bufferSize = bufferSize;
                     this.sampleRate = sampleRate;
@@ -257,12 +253,10 @@ export default () => {
                 postMessage(frequencies);
                 break;
             case 'resample':
+                importScripts('https://cdn.jsdelivr.net/npm/chroma-js@2.1.0/chroma.min.js');
                 const {oldMatrix, resample_width, colorMap, spectrumGain} = e.data.data;
-                //https://stackoverflow.com/questions/11909934/how-to-pass-functions-to-javascript-web-worker fn in webworker
-                // console.log(colorMap);
-                // const fn2 = new Function(colorMap[0], colorMap[1], colorMap[2]);
-                // console.log(fn2(1,2))
-                // console.log(colorMap)
+
+                const chroma_colorMap = chroma.scale(colorMap);
                 const newMatrix = [];
                 const oldPiece = 1 / oldMatrix.length;
                 const newPiece = 1 / resample_width;
@@ -297,9 +291,9 @@ export default () => {
 
                     for (m = 0; m < oldMatrix[0].length; m++) {
                         intColumn[m] = column[m];
-                        // colorColumn[m] = colorMap(column[m] * spectrumGain).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
+                        colorColumn[m] = chroma_colorMap(column[m] * spectrumGain).hex(); //prepares canvas colour for efficient actual drawing. Note: this array contains all hex code color
                     }
-                    newMatrix.push(intColumn);
+                    newMatrix.push(colorColumn);
                 }
 
                 postMessage(newMatrix);

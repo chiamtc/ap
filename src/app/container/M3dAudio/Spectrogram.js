@@ -3,11 +3,10 @@ import FFT from "./util/FFT";
 import worker from "./workers/worker.js";
 import WebWorker from "./workers/workerSetup";
 
-const Chroma = require('chroma-js')
 // import greenlet from 'greenlet'
 // import operative from 'operative';
-import threadify from 'threadify'
-import {Canvas, Image, transfer} from 'canvas-webworker';
+// import threadify from 'threadify'
+// import {Canvas, Image, transfer} from 'canvas-webworker';
 /**
  * 1. create wrapper
  * 2. create canvas
@@ -48,10 +47,13 @@ class Spectrogram {
         if (!params.colorMap) {
             throw new Error('No colorMap parameter found.')
         } else {
-            if (!Object.prototype.hasOwnProperty.call(params.colorMap, 'classes')) {
+            /*if (!Object.prototype.hasOwnProperty.call(params.colorMap, 'classes')) {
                 throw new Error(`"colorMap" parameter is not a class of Chroma-JS.\n
                 1. "npm install --save chroma-js" \n
                 2. create "colorMap" parameter using "scale()". Reference: https://gka.github.io/chroma.js/#color-scales`)
+            }*/
+            if(!params.colorMap instanceof Array){
+                throw new Error('"colorMap" param is not an array of string. Provide in such format ["#ffffff", "#000000"]')
             }
         }
         this.colorMap = params.colorMap;
@@ -212,8 +214,8 @@ class Spectrogram {
             type: 'resample',
             data: {
                 oldMatrix: frequenciesData,
-                // colorMap: this.colorMap,
                 resample_width: this.width,
+                colorMap: this.colorMap,
                 spectrumGain: this.spectrumGain
             }
         });
@@ -229,7 +231,7 @@ class Spectrogram {
                 for (i = 0; i < pixels.length; i++) {
                     for (j = 0; j < pixels[i].length; j++) {
                         my.spectrogramCtx.beginPath();
-                        my.spectrogramCtx.fillStyle = this.colorMap(pixels[i][j] * this.spectrumGain).hex();
+                        my.spectrogramCtx.fillStyle = pixels[i][j];
                         my.spectrogramCtx.fillRect(i, height - j * heightFactor, 1, heightFactor);
                         my.spectrogramCtx.fill();
                     }
