@@ -1,17 +1,7 @@
 import M3dAudio from "../container/M3dAudio/M3dAudio";
-import AudioContext from './webaudio_mock';
 
 describe('M3dAudio test suite', ()=>{
-    // var WebAudioTestAPI = global.WebAudioTestAPI;
-    var audioContext;
     beforeEach(() => {
-       /* global.AudioContext = jest.fn().mockImplementation(()=> {
-            console.log(wc);
-            return wc.default();
-        });*/
-
-        // audioContext = new WebAudioTestAPI.AudioContext();
-        global.AudioContext = AudioContext;
     });
 
     it('instantiate M3dAudio class' , ()=>{
@@ -35,6 +25,7 @@ describe('M3dAudio test suite', ()=>{
                 borderRightColor: 'red'
             },
         });
+        
     });
 
 });

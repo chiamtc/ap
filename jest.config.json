@@ -1,0 +1,21 @@
+{
+  "transform": {
+    "^.+\\.(jsx|js)?$": "<rootDir>/node_modules/babel-jest"
+  },
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "jsx",
+    "ts",
+    "tsx",
+    "node"
+  ],
+  "modulePathIgnorePatterns": [
+    "build",
+    "node_modules"
+  ],
+  "setupFiles": [
+    "<rootDir>/src/app/test/setup.js"
+  ],
+  "testEnvironment": "jsdom"
+}
