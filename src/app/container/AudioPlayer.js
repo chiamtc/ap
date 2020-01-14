@@ -1,6 +1,19 @@
 import React, {Component} from 'react';
-import M3dAudio from './M3dAudio/M3dAudio';
-import {subjects} from './M3dAudio/M3dAudio';
+/*import M3dAudio from 'M3dAudio'
+import {
+    subjects,
+    PREPARING,
+    UNREADY,
+    READY,
+    PLAY,
+    PAUSE,
+    PLAYING,
+    RESUME,
+    PAUSED,
+    FINISHED,
+    TIMELINE,
+    SPECTROGRAM
+} from 'M3dAudio';*/
 import {
     PREPARING,
     UNREADY,
@@ -14,9 +27,10 @@ import {
     TIMELINE,
     SPECTROGRAM
 } from "./M3dAudio/constants";
-import PropTypes from 'prop-types';
+import M3dAudio from './M3dAudio/M3dAudio';
+import {subjects} from './M3dAudio/M3dAudio';
 
-let Chroma = require('chroma-js');
+import PropTypes from 'prop-types';
 
 class AudioPlayer extends Component {
     constructor(props) {
@@ -111,9 +125,9 @@ class AudioPlayer extends Component {
                         interval: 5,
                         direction: 'top',
                         displayInterval: false,
-                        /*    fontColor:'#000000',
-                            fontFamily: `"Times New Roman", Times, serif`,
-                            fontSize: 12*/
+                        fontColor: '#000000',
+                        fontFamily: `"Times New Roman", Times, serif`,
+                        fontSize: 12
                     }
                 },
                 {
@@ -123,10 +137,10 @@ class AudioPlayer extends Component {
                         interval: 5,
                         direction: 'bottom',
                         displayInterval: true,
-                        fontColor: '#000',
-                        /* fontWeight:800,
-                         fontFamily: `"Times New Roman", Times, serif`,
-                         fontSize: 12*/
+                        fontColor: '#f00',
+                        fontWeight: 800,
+                        fontFamily: `"Times New Roman", Times, serif`,
+                        fontSize: 12
                     }
                 },
             ]
@@ -224,7 +238,7 @@ class AudioPlayer extends Component {
             </div>
             <hr/>
             <div style={{width: '100%', maxWidth: '600px'}}>
-            {/*<div>*/}
+                {/*<div>*/}
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
                 <div id="waveform-spectrogram"/>
