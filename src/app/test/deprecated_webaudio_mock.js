@@ -1,3 +1,15 @@
+
+/* Deprecated.
+source: https://github.com/benmurden/Web-Audio-API-Mock
+1. with modification - removed anonymous function
+2. to use this mock - not recommended since we can use web-audio-test-api pkg
+
+in setup.js
+import AudioContext from './webaudio_mock';
+global.AudioContext = AudioContext; //voila
+ */
+
+
 'use strict';
 
 var AnalyserNode, AudioBuffer, AudioBufferSourceNode, AudioContext, AudioDestinationNode, AudioListener, AudioNode,

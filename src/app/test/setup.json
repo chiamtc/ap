@@ -1,5 +1,0 @@
-{
-  "jest": {
-    "setupFiles": ["jest-canvas-mock"]
-  }
-}

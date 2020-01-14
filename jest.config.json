@@ -4,11 +4,7 @@
   },
   "moduleFileExtensions": [
     "js",
-    "json",
-    "jsx",
-    "ts",
-    "tsx",
-    "node"
+    "json"
   ],
   "modulePathIgnorePatterns": [
     "build",

@@ -1,4 +1,4 @@
-import M3dAudio from "../container/M3dAudio/M3dAudio";
+import M3dAudio from "M3dAudio";
 
 describe('M3dAudio test suite', ()=>{
     beforeEach(() => {
@@ -25,7 +25,7 @@ describe('M3dAudio test suite', ()=>{
                 borderRightColor: 'red'
             },
         });
-        
+
     });
 
 });
