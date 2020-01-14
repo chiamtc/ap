@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-/*import M3dAudio from 'M3dAudio'
+import M3dAudio from 'M3dAudio'
 import {
     subjects,
     PREPARING,
@@ -13,8 +13,8 @@ import {
     FINISHED,
     TIMELINE,
     SPECTROGRAM
-} from 'M3dAudio';*/
-import {
+} from 'M3dAudio';
+/*import {
     PREPARING,
     UNREADY,
     READY,
@@ -28,7 +28,7 @@ import {
     SPECTROGRAM
 } from "./M3dAudio/constants";
 import M3dAudio from './M3dAudio/M3dAudio';
-import {subjects} from './M3dAudio/M3dAudio';
+import {subjects} from './M3dAudio/M3dAudio';*/
 
 import PropTypes from 'prop-types';
 
