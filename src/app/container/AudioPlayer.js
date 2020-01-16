@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import M3dAudio from 'M3dAudio'
+import M3dAudio from '@m3dicine/audio-player'
 import {
     subjects,
     PREPARING,
@@ -13,7 +13,7 @@ import {
     FINISHED,
     TIMELINE,
     SPECTROGRAM
-} from 'M3dAudio';
+} from '@m3dicine/audio-player';
 /*import {
     PREPARING,
     UNREADY,
@@ -102,7 +102,8 @@ class AudioPlayer extends Component {
                 lineColor: 'rgb(40, 170, 226, 0.5)'
             },
             progressWaveStyle: {
-                backgroundColor: 'rgba(40, 170, 226,0.1)'
+                // backgroundColor: 'rgba(40, 170, 226,0.1)'
+                backgroundColor: 'rgba(255,255,255,0.5)'
             },
             cursorStyle: {
                 borderRightWidth: '2px',
