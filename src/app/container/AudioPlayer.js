@@ -202,39 +202,39 @@ class AudioPlayer extends Component {
         this.setState({zoomLevel: e.target.value});
     };
 
+    renderZoomButtons() {
+        let buttons = [];
+        for (let i = 20; i <= 200; i += 30) {
+            buttons.push(<button id={`zoom-btn-${i}`} key={i} disabled={this.state.status === 'unready'}
+                                 onClick={() => this.zoomViaButton(i)}>Zoom {i}
+            </button>)
+        }
+        return buttons;
+    }
+
     render() {
-        return <div style={{margin: '2em'}}>
-            <select defaultValue={this.state.filterId} onChange={this.changeFilter}>
+        return <div style={{margin: '32px'}}>
+            <select id="filter-select" defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>
-            <button disabled={this.state.status === 'unready'} onClick={this.play}>{this.renderStatus()}</button>
+            <button id="play-btn" disabled={this.state.status === 'unready'}
+                    onClick={this.play}>{this.renderStatus()}</button>
 
 
-            <p>play time: {this.state.time} s</p>
+            <p>play time: <span id="time-txt">{this.state.time}</span> s</p>
             <p>played percentage: {this.state.percent} % </p>
             <hr/>
             <div>
-                Volume: <input type="range" min="0" max="10" step="0.5" defaultValue={1} onChange={this.changeVolume}/>
-                <p>gain: {this.state.gain}</p>
+                Volume: <input id="gain-input" type="range" min="0" max="10" step="0.5" defaultValue={1}
+                               onChange={this.changeVolume}/>
+                <p>gain: <span id="gain-txt">{this.state.gain}</span></p>
             </div>
             <hr/>
             <div>
                 Zoom level: <input type="range" min="20" max="200" step={30} defaultValue={20} onChange={this.zoom}/>
-                <p>minpxpersec: {this.state.zoomLevel}</p>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(20)}>Zoom 20
-                </button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(50)}>Zoom 50
-                </button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(80)}>Zoom 80
-                </button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(110)}>Zoom 110
-                </button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(140)}>Zoom 140
-                </button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(170)}>Zoom 170
-                </button>
-                <button disabled={this.state.status === 'unready'} onClick={() => this.zoomViaButton(200)}>Zoom 200
-                </button>
+                <p>minpxpersec: <span id="zoom-txt">{this.state.zoomLevel}</span></p>
+
+                {this.renderZoomButtons()}
             </div>
             <hr/>
             <div style={{width: '100%', maxWidth: '600px'}}>

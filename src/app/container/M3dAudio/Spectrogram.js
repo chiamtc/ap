@@ -207,6 +207,8 @@ class Spectrogram {
                         my.spectrogramCtx.fill();
                     }
                 }
+
+                subjects.m3dAudio_state.next('ready')
             })
         };
     }
