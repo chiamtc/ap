@@ -46,6 +46,7 @@ class AudioPlayer extends Component {
         }
     }
 
+    //TODO: copy this whole project (front-end only) to @m3dicine/workspace with a script
     async componentDidMount() {
         /*
           Wavesurfer.js
@@ -115,7 +116,7 @@ class AudioPlayer extends Component {
                         fftSamples: 1024,
                         windowFunc: 'hamming',
                         spectrumGain: 1000,
-                        colorMap: colors
+                        colorMap: colors2
                     }
                 },
                 {
@@ -125,9 +126,9 @@ class AudioPlayer extends Component {
                         interval: 5,
                         direction: 'top',
                         displayInterval: false,
-                        fontColor: '#000000',
-                        fontFamily: `"Times New Roman", Times, serif`,
-                        fontSize: 12
+                        fontColor: '#000',
+                        fontFamily: `Avenir`,
+                        fontSize: 10
                     }
                 },
                 {
@@ -137,10 +138,10 @@ class AudioPlayer extends Component {
                         interval: 5,
                         direction: 'bottom',
                         displayInterval: true,
-                        fontColor: '#f00',
+                        fontColor: '#000',
                         fontWeight: 800,
-                        fontFamily: `"Times New Roman", Times, serif`,
-                        fontSize: 12
+                        fontFamily: `Avenir`,
+                        fontSize: 10
                     }
                 },
             ]
@@ -205,7 +206,8 @@ class AudioPlayer extends Component {
     renderZoomButtons() {
         let buttons = [];
         for (let i = 20; i <= 200; i += 30) {
-            buttons.push(<button id={`zoom-btn-${i}`} key={i} disabled={this.state.status === 'unready'}
+            const id = 'zoom-btn-'+i;
+            buttons.push(<button id={id} key={i} disabled={this.state.status === 'unready'}
                                  onClick={() => this.zoomViaButton(i)}>Zoom {i}
             </button>)
         }
@@ -237,7 +239,7 @@ class AudioPlayer extends Component {
                 {this.renderZoomButtons()}
             </div>
             <hr/>
-            <div style={{width: '100%', maxWidth: '600px'}}>
+            <div style={{width: '100%', maxWidth: '700px'}}>
                 {/*<div>*/}
                 <div id="waveform-timeline-top"/>
                 <div id="waveform-container"/>
