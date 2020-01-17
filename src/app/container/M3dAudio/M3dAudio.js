@@ -77,6 +77,7 @@ class M3dAudio {
         this.minPxPerSec = 20; //for zoom
         this.pixelRatio = window.devicePixelRatio || screen.deviceXDPI / screen.logicalXDPI;
         this.plugins = [];
+        this.pluginsParam = [];
         this.previousWidth = 0;
         this.responsive = false;
     }
@@ -93,7 +94,7 @@ class M3dAudio {
         //set m3daudio properties. url param is passed via a function call, im not setting it unless we want to cache eagerly and store it in indexedDB on client's pc
         this.filters = params.filters;
         this.defaultFilter = params.filterId; //filterId recorded from mobile app
-        this.plugins = params.plugins;
+        this.pluginsParam = params.plugins;
         this.responsive = params.responsive;
         this.minZoom = params.minZoom;
         this.maxZoom = params.maxZoom;
@@ -170,15 +171,17 @@ class M3dAudio {
     }
 
     createPlugins() {
-        this.plugins.map((plugin) => {
+        this.pluginsParam.map((plugin) => {
             switch (plugin.type) {
                 case TIMELINE:
                     const t = new WaveTimeline(plugin.params, this);
                     t.init();
+                    this.plugins.push(t);
                     break;
                 case SPECTROGRAM:
                     const p = new Spectrogram(plugin.params, this);
                     p.init();
+                    this.plugins.push(p);
                     break;
             }
         });

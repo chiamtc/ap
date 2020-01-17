@@ -102,10 +102,10 @@ class WaveTimeline {
 
             switch (this.direction) {
                 case 'top':
-                    style(this.container, {top: `${this.height}px`});
+                    style(this.container, {top: `${this.m3dAudio.wave_wrapper.height}px`});
                     break;
                 case 'bottom':
-                    style(this.container, {top: `-${this.height}px`});
+                    style(this.container, {top: `-${this.m3dAudio.wave_wrapper.height}px`});
                     break;
             }
 

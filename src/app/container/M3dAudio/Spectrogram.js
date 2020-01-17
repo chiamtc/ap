@@ -66,6 +66,7 @@ class Spectrogram {
         this.drawer = null; //aka wrapper;
         this.web_audio = null; //aka web_audio
         this.worker = null;
+        this.visible = true;
     }
 
     init() {
@@ -115,6 +116,10 @@ class Spectrogram {
         else this.container = container;
     }
 
+    toggleVisibility(visible){
+        this.visible = visible;
+    }
+
     createWrapper() {
         if (!this.wrapper) {
             const wrapper = document.createElement('spectrogram');
@@ -123,7 +128,7 @@ class Spectrogram {
             style(this.container, {
                 display: 'block',
                 position: 'relative',
-                top: `-${this.height}px`,
+                top: this.visible? `-${this.height}px` :0,
                 width: '100%'
             });
 

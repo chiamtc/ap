@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import M3dAudio from '@m3dicine/audio-player'
+import M3dAudio from '@m3dicine/audio'
 import {
     subjects,
     PREPARING,
@@ -12,8 +12,10 @@ import {
     PAUSED,
     FINISHED,
     TIMELINE,
-    SPECTROGRAM
-} from '@m3dicine/audio-player';
+    SPECTROGRAM,
+    MINIMAP,
+    MAINWAVE
+} from '@m3dicine/audio';
 /*import {
     PREPARING,
     UNREADY,
@@ -42,7 +44,8 @@ class AudioPlayer extends Component {
             gain: 1,
             status: UNREADY,
             filterId: 'F1', //default
-            zoomLevel: 20
+            zoomLevel: 20,
+            visible:0,
         }
     }
 
@@ -76,6 +79,10 @@ class AudioPlayer extends Component {
               ** in the case of zooming in/out, it repeats from step 7.1 based the value of params.minPxPerSec
 
            */
+        await this.reloadAudio();
+    }
+
+    async reloadAudio() {
         const m3dAudio = new M3dAudio();
 
         // const colors = Chroma.scale(['#ffffff', '#ffa500', '#ff0000']);
@@ -117,7 +124,22 @@ class AudioPlayer extends Component {
                         fftSamples: 1024,
                         windowFunc: 'hamming',
                         spectrumGain: 1000,
-                        colorMap: colors2
+                        colorMap: colors
+                    }
+                },
+                {
+                    type: MINIMAP,
+                    params: {
+                        container_id: '#waveform-minimap',
+                        height: 50,
+                        amplitude: 1,
+                        normalize: false,
+                        fill: true,
+                        responsive: true, //will expand the width, causes re-calculate of peak
+                        mainWaveStyle: {
+                            backgroundColor: '#333',
+                            lineColor: '#e7e7e7'
+                        },
                     }
                 },
                 {
@@ -207,7 +229,7 @@ class AudioPlayer extends Component {
     renderZoomButtons() {
         let buttons = [];
         for (let i = 20; i <= 200; i += 30) {
-            const id = 'zoom-btn-'+i;
+            const id = 'zoom-btn-' + i;
             buttons.push(<button id={id} key={i} disabled={this.state.status === 'unready'}
                                  onClick={() => this.zoomViaButton(i)}>Zoom {i}
             </button>)
@@ -215,8 +237,10 @@ class AudioPlayer extends Component {
         return buttons;
     }
 
+    hideWaveform = (e) => this.state.m3dAudio.toggleVisibility(JSON.parse(e.target.value));
+
     render() {
-        return <div style={{margin: '32px'}}>
+        return <div style={{margin: '32px', backgroundColor: '#ddd',  scrollBehavior: 'smooth'}}>
             <select id="filter-select" defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>
@@ -240,12 +264,21 @@ class AudioPlayer extends Component {
                 {this.renderZoomButtons()}
             </div>
             <hr/>
-            <div style={{width: '100%', maxWidth: '700px'}}>
-                {/*<div>*/}
-                <div id="waveform-timeline-top"/>
-                <div id="waveform-container"/>
-                <div id="waveform-spectrogram"/>
-                <div id="waveform-timeline-bottom"/>
+            <select id="hide-waveform" onChange={this.hideWaveform}>
+                <option value={`{"hide":"", "show":"BOTH" }`}>PCG & spectrogram</option>
+                <option value={`{"hide":"${SPECTROGRAM}", "show":"${MAINWAVE}" }`}>PCG</option>
+                <option value={`{"hide":"${MAINWAVE}", "show":"${SPECTROGRAM}" }`}>spectrogram</option>
+            </select>
+            <hr/>
+            <div style={{backgroundColor: '#eee'}}>
+                <div style={{width: '100%', maxWidth: '700px', height:'250px'}}>
+                    {/*<div>*/}
+                    <div id="waveform-minimap"/>
+                    <div id="waveform-timeline-top"/>
+                    <div style={{display:this.state.visible !== "2"? 'block': 'none'}}><div id="waveform-container"/></div>
+                    <div id="waveform-spectrogram"/>
+                    <div id="waveform-timeline-bottom"/>
+                </div>
             </div>
             <hr/>
         </div>
