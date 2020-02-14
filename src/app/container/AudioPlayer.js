@@ -16,21 +16,6 @@ import {
     MINIMAP,
     MAINWAVE
 } from '@m3dicine/audio';
-/*import {
-    PREPARING,
-    UNREADY,
-    READY,
-    PLAY,
-    PAUSE,
-    PLAYING,
-    RESUME,
-    PAUSED,
-    FINISHED,
-    TIMELINE,
-    SPECTROGRAM
-} from "./M3dAudio/constants";
-import M3dAudio from './M3dAudio/M3dAudio';
-import {subjects} from './M3dAudio/M3dAudio';*/
 
 import PropTypes from 'prop-types';
 
@@ -45,7 +30,7 @@ class AudioPlayer extends Component {
             status: UNREADY,
             filterId: 'F1', //default
             zoomLevel: 20,
-            visible:0,
+            visible: 0,
         }
     }
 
@@ -82,9 +67,15 @@ class AudioPlayer extends Component {
         await this.reloadAudio();
     }
 
+    async componentDidUpdate(prevProps, prevState, snapshot) {
+        if (prevProps.url !== this.props.url) {
+            await this.state.m3dAudio.destroy();
+            await this.reloadAudio();
+        }
+    }
+
     async reloadAudio() {
         const m3dAudio = new M3dAudio();
-
         // const colors = Chroma.scale(['#ffffff', '#ffa500', '#ff0000']);
         // const colors2 = Chroma.scale(['#111111', '#7a1b0c', '#ff0000', '#ffa100', '#ffff00', '#ffff9e', '#ffffff']).mode('lab'); //
         // const colors3 = Chroma.scale(['#00a8de', '#36469e', '#b52a8b', '#ec215c', '#f67b30', '#dddd37', '#009e54'])
@@ -106,11 +97,12 @@ class AudioPlayer extends Component {
             responsive: true, //will expand the width, causes re-calculate of peak
             mainWaveStyle: {
                 backgroundColor: 'transparent',
-                lineColor: 'rgb(40, 170, 226, 0.5)'
+                lineColor: 'rgb(40, 170, 226, 0.5)',
+                // lineColor: 'rgba(255,255,255)'
             },
             progressWaveStyle: {
-                // backgroundColor: 'rgba(40, 170, 226,0.1)'
-                backgroundColor: 'rgba(255,255,255,0.5)'
+                backgroundColor: 'rgba(40, 170, 226, 0.1)'
+                // backgroundColor: 'rgba(255,255,255,0.5)'
             },
             cursorStyle: {
                 borderRightWidth: '2px',
@@ -168,7 +160,7 @@ class AudioPlayer extends Component {
                     }
                 },
             ]
-        }); //change this to this.props.filterId
+        });
         await m3dAudio.load(this.props.url);
         await this.setState({m3dAudio});
         subjects.m3dAudio_state.subscribe((res) => {
@@ -237,10 +229,13 @@ class AudioPlayer extends Component {
         return buttons;
     }
 
-    hideWaveform = (e) => this.state.m3dAudio.toggleVisibility(JSON.parse(e.target.value));
+    hideWaveform = (e) => {
+        const pluginContainerArray = ['#waveform-container', '#waveform-spectrogram']
+        this.state.m3dAudio.toggleVisibility(e.target.value, pluginContainerArray);
+    }
 
     render() {
-        return <div style={{margin: '32px', backgroundColor: '#ddd',  scrollBehavior: 'smooth'}}>
+        return <div style={{margin: '32px', backgroundColor: '#ddd', scrollBehavior: 'smooth'}}>
             <select id="filter-select" defaultValue={this.state.filterId} onChange={this.changeFilter}>
                 {this.renderOptions()}
             </select>
@@ -265,17 +260,22 @@ class AudioPlayer extends Component {
             </div>
             <hr/>
             <select id="hide-waveform" onChange={this.hideWaveform}>
-                <option value={`{"hide":"", "show":"BOTH" }`}>PCG & spectrogram</option>
-                <option value={`{"hide":"${SPECTROGRAM}", "show":"${MAINWAVE}" }`}>PCG</option>
-                <option value={`{"hide":"${MAINWAVE}", "show":"${SPECTROGRAM}" }`}>spectrogram</option>
+                {/*  <option value={`{"hide":"", "show":"BOTH" }`}>PCG & spectrogram</option>
+                <option value={`{"hide":"#waveform-spectrogram", "show":"#waveform-container" }`}>PCG</option>
+                <option value={`{"hide":"#waveform-container", "show":"#waveform-spectrogram" }`}>spectrogram</option>*/}
+                <option value="all">PCG & spectrogram</option>
+                <option value="#waveform-container">PCG</option>
+                <option value="#waveform-spectrogram">spectrogram</option>
             </select>
             <hr/>
             <div style={{backgroundColor: '#eee'}}>
-                <div style={{width: '100%', maxWidth: '700px', height:'250px'}}>
+                <div style={{width: '100%', maxWidth: '700px', height: '250px'}}>
                     {/*<div>*/}
                     <div id="waveform-minimap"/>
                     <div id="waveform-timeline-top"/>
-                    <div style={{display:this.state.visible !== "2"? 'block': 'none'}}><div id="waveform-container"/></div>
+                    <div style={{display: this.state.visible !== "2" ? 'block' : 'none'}}>
+                        <div id="waveform-container"/>
+                    </div>
                     <div id="waveform-spectrogram"/>
                     <div id="waveform-timeline-bottom"/>
                 </div>

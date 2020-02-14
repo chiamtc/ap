@@ -27,6 +27,7 @@
     "@babel/preset-env": "^7.8.3",
     "@babel/preset-react": "^7.8.3",
     "@m3dicine/audio": "file:../aplib",
+    "@m3dicine/core": "^1.0.85",
     "babel-loader": "^8.0.6",
     "babel-plugin-module-resolver": "^3.1.1",
     "canvas-webworker": "0.0.3",
